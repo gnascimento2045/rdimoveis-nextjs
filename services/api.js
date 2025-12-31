@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8001'
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL
 const API = `${BACKEND_URL}/api`
 
 const getToken = () => {
