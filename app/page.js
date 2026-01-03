@@ -23,14 +23,7 @@ export default async function Home() {
       <Navbar />
       <WhatsAppButton />
 
-      <section className="relative h-[600px] flex items-center justify-center">
-        <Image
-          src="https://images.unsplash.com/photo-1625426242633-3be4b3379dfb?crop=entropy&cs=srgb&fm=jpg&q=85"
-          alt="Brasília"
-          fill
-          className="object-cover"
-          priority
-        />
+      <section className="relative pt-20 pb-32 flex items-center justify-center bg-cover bg-center" style={{backgroundImage: 'url(https://images.unsplash.com/photo-1625426242633-3be4b3379dfb?crop=entropy&cs=srgb&fm=jpg&q=85)'}}>
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative z-10 container mx-auto px-4 text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-2xl">

@@ -8,8 +8,12 @@ import { propertyService } from '@/services/api'
 
 export default function SearchBar() {
   const router = useRouter()
-  const [type, setType] = useState('comprar')
+  const [purpose, setPurpose] = useState('comprar')
+  const [propertyType, setPropertyType] = useState('0')
   const [city, setCity] = useState('')
+  const [rooms, setRooms] = useState('0')
+  const [minPrice, setMinPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
   const [suggestions, setSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [allCities, setAllCities] = useState([])
@@ -50,8 +54,12 @@ export default function SearchBar() {
 
   const handleSearch = () => {
     const params = new URLSearchParams()
-    if (type) params.append('type', type)
+    if (purpose) params.append('purpose', purpose)
+    if (propertyType !== '0') params.append('type', propertyType)
     if (city) params.append('city', city)
+    if (rooms !== '0') params.append('rooms', rooms)
+    if (minPrice) params.append('minPrice', minPrice)
+    if (maxPrice) params.append('maxPrice', maxPrice)
     router.push(`/properties?${params.toString()}`)
   }
 
@@ -70,59 +78,139 @@ export default function SearchBar() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
-      className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl p-8 max-w-4xl mx-auto"
+      className="bg-white/95 backdrop-blur-md rounded-lg shadow-2xl p-8 max-w-6xl mx-auto"
     >
-      <div className="flex gap-4 mb-6">
+      {/* Opções: Comprar, Alugar, Lançamentos */}
+      <div className="flex gap-8 mb-12 justify-center border-b border-gray-200 pb-6">
         <button
-          onClick={() => setType('comprar')}
-          className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-            type === 'comprar' ? 'bg-rd-blue text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          onClick={() => setPurpose('comprar')}
+          className={`px-8 py-2 font-bold text-lg transition-all ${
+            purpose === 'comprar' 
+              ? 'text-rd-blue border-b-4 border-rd-blue' 
+              : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Comprar
+          COMPRAR
         </button>
         <button
-          onClick={() => setType('alugar')}
-          className={`flex-1 py-3 rounded-lg font-semibold transition-colors ${
-            type === 'alugar' ? 'bg-rd-blue text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          onClick={() => setPurpose('alugar')}
+          className={`px-8 py-2 font-bold text-lg transition-all ${
+            purpose === 'alugar' 
+              ? 'text-rd-blue border-b-4 border-rd-blue' 
+              : 'text-gray-500 hover:text-gray-700'
           }`}
         >
-          Alugar
+          ALUGAR
+        </button>
+        <button
+          onClick={() => setPurpose('lancamentos')}
+          className={`px-8 py-2 font-bold text-lg transition-all ${
+            purpose === 'lancamentos' 
+              ? 'text-rd-blue border-b-4 border-rd-blue' 
+              : 'text-gray-500 hover:text-gray-700'
+          }`}
+        >
+          LANÇAMENTOS
         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 relative" ref={inputRef}>
-          <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-          <input
-            type="text"
-            placeholder="Cidade ou região..."
-            value={city}
-            onChange={(e) => handleCityChange(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-            className="w-full pl-10 pr-4 py-4 rounded-lg border border-gray-300 text-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
-          />
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-50 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
-              {suggestions.map((suggestion, index) => (
-                <div
-                  key={index}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className="px-4 py-3 hover:bg-gray-100 cursor-pointer transition-colors flex items-center"
-                >
-                  <MapPin className="h-4 w-4 mr-2 text-gray-400" />
-                  <span className="text-gray-700">{suggestion}</span>
+      {/* Grid de campos */}
+      <div className="space-y-6 mb-8">
+        {/* Primeira linha: Tipo, Localização, Quartos */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Tipo */}
+          <div className="space-y-3">
+            <label className="block text-xs font-bold text-rd-blue tracking-wide">TIPO</label>
+            <select
+              value={propertyType}
+              onChange={(e) => setPropertyType(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue bg-white text-gray-700 font-medium"
+            >
+              <option value="0">Todos</option>
+              <option value="apartamento">Apartamento</option>
+              <option value="casa">Casa</option>
+              <option value="cobertura">Cobertura</option>
+              <option value="terreno">Terreno</option>
+              <option value="comercial">Comercial</option>
+            </select>
+          </div>
+
+          {/* Localização */}
+          <div className="space-y-3">
+            <label className="block text-xs font-bold text-rd-blue tracking-wide">LOCALIZAÇÃO</label>
+            <div className="relative" ref={inputRef}>
+              <input
+                type="text"
+                placeholder="Bairro ou Cidade"
+                value={city}
+                onChange={(e) => handleCityChange(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium"
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-50 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="px-4 py-3 hover:bg-gray-100 cursor-pointer transition-colors flex items-center"
+                    >
+                      <MapPin className="h-4 w-4 mr-2 text-gray-400" />
+                      <span className="text-gray-700">{suggestion}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
             </div>
-          )}
+          </div>
+
+          {/* Quartos */}
+          <div className="space-y-3">
+            <label className="block text-xs font-bold text-rd-blue tracking-wide">QUARTOS</label>
+            <select
+              value={rooms}
+              onChange={(e) => setRooms(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue bg-white text-gray-700 font-medium"
+            >
+              <option value="0">Quartos</option>
+              <option value="1">1 Quarto</option>
+              <option value="2">2 Quartos</option>
+              <option value="3">3 Quartos</option>
+              <option value="4">4+ Quartos</option>
+            </select>
+          </div>
         </div>
+
+        {/* Segunda linha: Valor (completo) */}
+        <div className="space-y-3">
+          <label className="block text-xs font-bold text-rd-blue tracking-wide">VALOR</label>
+          <div className="flex gap-6">
+            <input
+              type="text"
+              placeholder="Min"
+              value={minPrice}
+              onChange={(e) => setMinPrice(e.target.value)}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium"
+            />
+            <input
+              type="text"
+              placeholder="Max"
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Botão Buscar */}
+      <div className="flex justify-center pt-4">
         <button
           onClick={handleSearch}
-          className="bg-rd-blue hover:bg-rd-blue-hover text-white px-8 py-4 rounded-lg font-bold text-lg shadow-lg transition-colors flex items-center justify-center space-x-2"
+          className="w-full bg-rd-blue hover:bg-rd-blue-hover text-white px-8 py-4 rounded-lg font-bold text-lg shadow-lg transition-colors flex items-center justify-center space-x-2"
         >
           <Search className="h-5 w-5" />
-          <span>Buscar Imóveis</span>
+          <span>BUSCAR IMÓVEIS</span>
         </button>
       </div>
     </motion.div>

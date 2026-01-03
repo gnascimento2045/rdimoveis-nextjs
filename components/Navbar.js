@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { Home, Building2, Phone } from 'lucide-react'
 import { motion } from 'framer-motion'
 
@@ -14,7 +15,13 @@ export default function Navbar() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3">
-            <Building2 className="h-8 w-8 text-rd-blue" />
+            <Image 
+              src="/assets/logo.png" 
+              alt="RD Imóveis DF Logo" 
+              width={60} 
+              height={60}
+              className="h-16 w-16 object-contain"
+            />
             <div>
               <h1 className="text-2xl font-bold text-rd-blue">RD IMÓVEIS DF</h1>
               <p className="text-xs text-gray-600 tracking-wide">Idealize! Sonhe! Realize!</p>
@@ -37,7 +44,7 @@ export default function Navbar() {
               className="bg-rd-blue hover:bg-rd-blue-hover text-white rounded-full px-6 py-2 font-semibold shadow-lg transition-colors flex items-center space-x-2"
             >
               <Phone className="h-4 w-4" />
-              <span>Contato</span>
+              <span>FALE CONOSCO AGORA</span>
             </a>
           </div>
         </div>
