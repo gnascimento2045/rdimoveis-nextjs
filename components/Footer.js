@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Building2, Mail, Phone, Facebook, Instagram, Linkedin } from 'lucide-react'
+import { Building2, Phone, Facebook, Instagram } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -33,13 +33,11 @@ export default function Footer() {
           <div>
             <h4 className="font-semibold text-lg mb-4">Contato</h4>
             <ul className="space-y-3">
-              <li className="flex items-center space-x-2 text-gray-400">
-                <Phone className="h-4 w-4" />
-                <span>(61) 99333-6757</span>
-              </li>
-              <li className="flex items-center space-x-2 text-gray-400">
-                <Mail className="h-4 w-4" />
-                <span>contato@rdimoveisdf.com.br</span>
+              <li>
+                <a href="https://wa.me/5561993336757" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors">
+                  <Phone className="h-4 w-4" />
+                  <span>(61) 99333-6757</span>
+                </a>
               </li>
             </ul>
           </div>
@@ -52,9 +50,6 @@ export default function Footer() {
               </a>
               <a href="https://www.instagram.com/rdimoveisdf/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-white transition-colors">
                 <Instagram className="h-6 w-6" />
-              </a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">
-                <Linkedin className="h-6 w-6" />
               </a>
             </div>
           </div>
