@@ -81,33 +81,33 @@ export default function SearchBar() {
       className="bg-white/95 backdrop-blur-md rounded-lg shadow-2xl p-8 max-w-6xl mx-auto"
     >
       {/* Opções: Comprar, Alugar, Lançamentos */}
-      <div className="flex gap-8 mb-12 justify-center border-b border-gray-200 pb-6">
+      <div className="flex gap-4 mb-12 justify-center">
         <button
           onClick={() => setPurpose('comprar')}
-          className={`px-8 py-2 font-bold text-lg transition-all ${
+          className={`px-8 py-2 font-bold text-lg rounded-lg transition-all ${
             purpose === 'comprar' 
-              ? 'text-rd-blue border-b-4 border-rd-blue' 
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-rd-blue text-white hover:bg-rd-blue-hover' 
+              : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
           }`}
         >
           COMPRAR
         </button>
         <button
           onClick={() => setPurpose('alugar')}
-          className={`px-8 py-2 font-bold text-lg transition-all ${
+          className={`px-8 py-2 font-bold text-lg rounded-lg transition-all ${
             purpose === 'alugar' 
-              ? 'text-rd-blue border-b-4 border-rd-blue' 
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-rd-blue text-white hover:bg-rd-blue-hover' 
+              : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
           }`}
         >
           ALUGAR
         </button>
         <button
           onClick={() => setPurpose('lancamentos')}
-          className={`px-8 py-2 font-bold text-lg transition-all ${
+          className={`px-8 py-2 font-bold text-lg rounded-lg transition-all ${
             purpose === 'lancamentos' 
-              ? 'text-rd-blue border-b-4 border-rd-blue' 
-              : 'text-gray-500 hover:text-gray-700'
+              ? 'bg-rd-blue text-white hover:bg-rd-blue-hover' 
+              : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
           }`}
         >
           LANÇAMENTOS
