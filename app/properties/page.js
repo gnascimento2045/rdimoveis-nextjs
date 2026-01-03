@@ -19,7 +19,9 @@ function PropertiesContent() {
     type: searchParams.get('type') || '',
     status: '',
     city: searchParams.get('city') || '',
-    neighborhood: searchParams.get('neighborhood') || ''
+    neighborhood: searchParams.get('neighborhood') || '',
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || ''
   })
 
   useEffect(() => {
@@ -55,11 +57,27 @@ function PropertiesContent() {
       }
 
       if (filters.neighborhood) {
-        data = data.filter(p => 
+        data = data.filter(p =>
           p.neighborhood && p.neighborhood.toLowerCase().includes(filters.neighborhood.toLowerCase())
         )
       }
-      
+
+      if (filters.minPrice) {
+        const minPriceNum = parseFloat(filters.minPrice.replace(/[^\d]/g, ''))
+        data = data.filter(p => {
+          const price = p.price || p.rent_price || 0
+          return price >= minPriceNum
+        })
+      }
+
+      if (filters.maxPrice) {
+        const maxPriceNum = parseFloat(filters.maxPrice.replace(/[^\d]/g, ''))
+        data = data.filter(p => {
+          const price = p.price || p.rent_price || 0
+          return price <= maxPriceNum
+        })
+      }
+
       setProperties(data)
     } catch (error) {
       console.error('Error loading properties:', error)
@@ -73,7 +91,7 @@ function PropertiesContent() {
   }
 
   const clearFilters = () => {
-    setFilters({ type: '', status: '', city: '', neighborhood: '' })
+    setFilters({ type: '', status: '', city: '', neighborhood: '', minPrice: '', maxPrice: '' })
   }
 
   return (
@@ -184,6 +202,30 @@ function PropertiesContent() {
             >
               Limpar Filtros
             </button>
+          </div>
+
+          {/* Valor (Price Range) */}
+          <div className="flex flex-col md:flex-row gap-4 items-end mt-4">
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Valor Mínimo</label>
+              <input
+                type="text"
+                placeholder="Ex: 100000"
+                value={filters.minPrice}
+                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Valor Máximo</label>
+              <input
+                type="text"
+                placeholder="Ex: 500000"
+                value={filters.maxPrice}
+                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+              />
+            </div>
           </div>
         </div>
 
