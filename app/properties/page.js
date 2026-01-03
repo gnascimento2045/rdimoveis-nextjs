@@ -13,15 +13,31 @@ function PropertiesContent() {
   const searchParams = useSearchParams()
   const [properties, setProperties] = useState([])
   const [loading, setLoading] = useState(true)
+  const [neighborhoods, setNeighborhoods] = useState([])
+  const [cities, setCities] = useState([])
   const [filters, setFilters] = useState({
     type: searchParams.get('type') || '',
     status: '',
-    city: searchParams.get('city') || ''
+    city: searchParams.get('city') || '',
+    neighborhood: searchParams.get('neighborhood') || ''
   })
 
   useEffect(() => {
     loadProperties()
+    loadCitiesAndNeighborhoods()
   }, [filters])
+
+  const loadCitiesAndNeighborhoods = async () => {
+    try {
+      const data = await propertyService.getProperties({ active: true })
+      const uniqueCities = [...new Set(data.map(p => p.city).filter(Boolean))]
+      const uniqueNeighborhoods = [...new Set(data.map(p => p.neighborhood).filter(Boolean))]
+      setCities(uniqueCities.sort())
+      setNeighborhoods(uniqueNeighborhoods.sort())
+    } catch (error) {
+      console.error('Error loading cities and neighborhoods:', error)
+    }
+  }
 
   const loadProperties = async () => {
     setLoading(true)
@@ -35,6 +51,12 @@ function PropertiesContent() {
       if (filters.city) {
         data = data.filter(p => 
           p.city.toLowerCase().includes(filters.city.toLowerCase())
+        )
+      }
+
+      if (filters.neighborhood) {
+        data = data.filter(p => 
+          p.neighborhood && p.neighborhood.toLowerCase().includes(filters.neighborhood.toLowerCase())
         )
       }
       
@@ -51,7 +73,7 @@ function PropertiesContent() {
   }
 
   const clearFilters = () => {
-    setFilters({ type: '', status: '', city: '' })
+    setFilters({ type: '', status: '', city: '', neighborhood: '' })
   }
 
   return (
@@ -70,19 +92,65 @@ function PropertiesContent() {
 
       <div className="container mx-auto px-4 py-12">
         <div className="bg-white rounded-xl shadow-md p-6 mb-8">
-          {filters.city && (
-            <div className="mb-4 flex items-center gap-2">
+          {(filters.city || filters.neighborhood) && (
+            <div className="mb-4 flex items-center gap-2 flex-wrap">
               <span className="text-sm text-gray-600">Buscando em:</span>
-              <span className="bg-rd-blue text-white px-3 py-1 rounded-full text-sm font-medium">{filters.city}</span>
-              <button 
-                onClick={() => handleFilterChange('city', '')}
-                className="text-gray-500 hover:text-gray-700 text-sm underline"
-              >
-                Limpar
-              </button>
+              {filters.city && (
+                <>
+                  <span className="bg-rd-blue text-white px-3 py-1 rounded-full text-sm font-medium">{filters.city}</span>
+                  <button 
+                    onClick={() => handleFilterChange('city', '')}
+                    className="text-gray-500 hover:text-gray-700 text-sm underline"
+                  >
+                    ✕
+                  </button>
+                </>
+              )}
+              {filters.neighborhood && (
+                <>
+                  <span className="bg-rd-blue text-white px-3 py-1 rounded-full text-sm font-medium">{filters.neighborhood}</span>
+                  <button 
+                    onClick={() => handleFilterChange('neighborhood', '')}
+                    className="text-gray-500 hover:text-gray-700 text-sm underline"
+                  >
+                    ✕
+                  </button>
+                </>
+              )}
             </div>
           )}
           <div className="flex flex-col md:flex-row gap-4 items-end">
+            {/* Cidade */}
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Cidade</label>
+              <select
+                value={filters.city}
+                onChange={(e) => handleFilterChange('city', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+              >
+                <option value="">Todas as cidades</option>
+                {cities.map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Bairro/Região */}
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Bairro / Região</label>
+              <select
+                value={filters.neighborhood}
+                onChange={(e) => handleFilterChange('neighborhood', e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+              >
+                <option value="">Todos os bairros</option>
+                {neighborhoods.map(neighborhood => (
+                  <option key={neighborhood} value={neighborhood}>{neighborhood}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Tipo de Negociação */}
             <div className="flex-1">
               <label className="text-sm font-medium text-gray-700 mb-2 block">Tipo de Negociação</label>
               <select
@@ -96,6 +164,7 @@ function PropertiesContent() {
               </select>
             </div>
 
+            {/* Situação */}
             <div className="flex-1">
               <label className="text-sm font-medium text-gray-700 mb-2 block">Situação</label>
               <select

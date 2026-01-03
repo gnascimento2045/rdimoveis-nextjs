@@ -1,5 +1,8 @@
+'use client'
+
 import Link from 'next/link'
 import Image from 'next/image'
+import { useState, useEffect } from 'react'
 import SearchBar from '@/components/SearchBar'
 import PropertyCard from '@/components/PropertyCard'
 import Navbar from '@/components/Navbar'
@@ -7,15 +10,55 @@ import Footer from '@/components/Footer'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import { propertyService } from '@/services/api'
 
-export const revalidate = 60
+export default function Home() {
+  const [allProperties, setAllProperties] = useState([])
+  const [filteredProperties, setFilteredProperties] = useState([])
+  const [selectedType, setSelectedType] = useState('comprar')
+  const [loading, setLoading] = useState(true)
 
-export default async function Home() {
-  let properties = []
-  try {
-    properties = await propertyService.getProperties({ active: true })
-    properties = properties.slice(0, 6)
-  } catch (error) {
-    console.error('Error loading properties:', error)
+  useEffect(() => {
+    loadProperties()
+  }, [])
+
+  useEffect(() => {
+    filterProperties(selectedType)
+  }, [selectedType, allProperties])
+
+  const loadProperties = async () => {
+    setLoading(true)
+    try {
+      let data = await propertyService.getProperties({ active: true })
+      data = data.slice(0, 12)
+      setAllProperties(data)
+      filterProperties('comprar', data)
+    } catch (error) {
+      console.error('Error loading properties:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const filterProperties = (type, properties = allProperties) => {
+    let filtered = properties
+    if (type === 'comprar') {
+      filtered = properties.filter(p => 
+        p.finalidade === 'comprar' || 
+        p.finalidade === 'venda' ||
+        p.type === 'comprar' ||
+        p.type === 'venda'
+      )
+    } else if (type === 'alugar') {
+      filtered = properties.filter(p => 
+        p.finalidade === 'alugar' || 
+        p.finalidade === 'aluguel' ||
+        p.type === 'alugar' ||
+        p.type === 'aluguel'
+      )
+    } else if (type === 'lancamentos') {
+      filtered = properties.filter(p => p.condicao === 'na_planta' || p.status === 'na_planta')
+    }
+    setFilteredProperties(filtered)
+    setSelectedType(type)
   }
 
   return (
@@ -45,25 +88,50 @@ export default async function Home() {
               Imóveis em Destaque
             </h2>
             <div className="flex gap-4 mb-12 justify-center">
-              <Link href="/properties?purpose=comprar" className="px-6 py-3 font-bold text-rd-blue border-b-4 border-rd-blue">
+              <button 
+                onClick={() => filterProperties('comprar')}
+                className={`px-8 py-3 font-bold rounded-lg transition-all ${
+                  selectedType === 'comprar' 
+                    ? 'bg-rd-blue text-white hover:bg-rd-blue-hover' 
+                    : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
+                }`}
+              >
                 COMPRAR
-              </Link>
-              <Link href="/properties?purpose=alugar" className="px-6 py-3 font-bold text-gray-600 hover:text-gray-800">
+              </button>
+              <button 
+                onClick={() => filterProperties('alugar')}
+                className={`px-8 py-3 font-bold rounded-lg transition-all ${
+                  selectedType === 'alugar' 
+                    ? 'bg-rd-blue text-white hover:bg-rd-blue-hover' 
+                    : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
+                }`}
+              >
                 ALUGUEL
-              </Link>
-              <Link href="/properties?purpose=lancamentos" className="px-6 py-3 font-bold text-gray-600 hover:text-gray-800">
+              </button>
+              <button 
+                onClick={() => filterProperties('lancamentos')}
+                className={`px-8 py-3 font-bold rounded-lg transition-all ${
+                  selectedType === 'lancamentos' 
+                    ? 'bg-rd-blue text-white hover:bg-rd-blue-hover' 
+                    : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
+                }`}
+              >
                 LANÇAMENTOS
-              </Link>
+              </button>
             </div>
           </div>
 
-          {properties.length === 0 ? (
+          {loading ? (
             <div className="text-center py-12">
-              <p className="text-gray-600">Nenhum imóvel disponível no momento.</p>
+              <p className="text-gray-600">Carregando imóveis...</p>
+            </div>
+          ) : filteredProperties.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600">Nenhum imóvel disponível para esta categoria.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {properties.map((property, index) => (
+              {filteredProperties.map((property, index) => (
                 <PropertyCard key={property.id} property={property} index={index} />
               ))}
             </div>
