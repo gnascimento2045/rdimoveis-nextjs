@@ -82,13 +82,13 @@ export default function Home() {
       <Navbar />
       <WhatsAppButton />
 
-      <section className="relative pt-20 pb-32 flex items-center justify-center bg-cover bg-center" style={{backgroundImage: `url(${heroImageUrl})`}}>
+      <section className="relative min-h-screen flex items-start justify-center bg-cover bg-center pt-6 pb-12 md:pt-8 md:pb-14" style={{backgroundImage: `url(${heroImageUrl})`}}>
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative z-10 container mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-2xl">
+          <h1 className="text-5xl md:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-2xl">
             IDEALIZE!<br />SONHE!<br />REALIZE!
           </h1>
-          <p className="text-xl md:text-2xl text-white mb-12 drop-shadow-lg">
+          <p className="text-xl md:text-2xl text-white mb-8 md:mb-10 drop-shadow-lg">
             Encontre o imóvel dos seus sonhos em Brasília
           </p>
           <div className="max-w-4xl mx-auto">
@@ -97,13 +97,13 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="py-24 bg-gray-50">
+      <section className="pt-8 pb-12 md:pt-10 md:pb-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+          <div className="text-center mb-8 md:mb-10">
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6 md:mb-7">
               Imóveis em Destaque
             </h2>
-            <div className="flex gap-4 mb-12 justify-center">
+            <div className="flex gap-4 mb-8 md:mb-10 justify-center">
               <button 
                 onClick={() => filterProperties('comprar')}
                 className={`px-8 py-3 font-bold rounded-lg transition-all ${

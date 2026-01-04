@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { X, ChevronRight } from 'lucide-react'
 import MediaUploader from './MediaUploader'
 import MediaManager from './MediaManager'
+import { maskCurrencyBRL, currencyToNumber } from '@/lib/utils'
 
 export default function PropertyCreationWizard({ isOpen, onClose, onSave, property = null }) {
   const [step, setStep] = useState(1) // Step 1: Media Upload, Step 2: Property Details
@@ -14,6 +15,7 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
   const normalizeCharacteristics = (data) => ({
     ...data,
     price_on_request: data?.price_on_request || false,
+    price: data?.price ? maskCurrencyBRL(String(data.price)) : '',
     characteristics: {
       internas: data?.characteristics?.internas || [],
       externas: data?.characteristics?.externas || [],
@@ -227,7 +229,7 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
 
     const priceValue = (formData.price_on_request || formData.price === '')
       ? null
-      : Number(formData.price)
+      : currencyToNumber(formData.price)
 
     const finalData = {
       ...normalizeCharacteristics(formData),
@@ -839,14 +841,15 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                       Preço (R$) {formData.price_on_request ? '' : '*'}
                     </label>
                     <input
-                      type="number"
+                      type="text"
+                      inputMode="numeric"
                       name="price"
                       value={formData.price}
-                      onChange={handleChange}
+                      onChange={(e) => setFormData(prev => ({ ...prev, price: maskCurrencyBRL(e.target.value) }))}
                       required={!formData.price_on_request}
                       disabled={formData.price_on_request}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue disabled:bg-gray-100"
-                      placeholder="0"
+                      placeholder="R$ 0,00"
                     />
                   </div>
                 </div>

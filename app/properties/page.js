@@ -8,12 +8,15 @@ import WhatsAppButton from '@/components/WhatsAppButton'
 import Image from 'next/image'
 import PropertyCard from '@/components/PropertyCard'
 import { propertyService } from '@/services/api'
+import { currencyToNumber, maskCurrencyBRL } from '@/lib/utils'
 import { motion } from 'framer-motion'
 
 function PropertiesContent() {
   const searchParams = useSearchParams()
   const [properties, setProperties] = useState([])
+  const [cities, setCities] = useState([])
   const [neighborhoods, setNeighborhoods] = useState([])
+  const [loading, setLoading] = useState(false)
   const [filters, setFilters] = useState({
     type: searchParams.get('type') || '',
     status: '',
@@ -24,18 +27,51 @@ function PropertiesContent() {
     maxPrice: searchParams.get('maxPrice') || ''
   })
 
+  const normalize = (value = '') =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+
   useEffect(() => {
     loadProperties()
     loadCitiesAndNeighborhoods()
   }, [filters])
 
+  // Aplica máscara inicial se vier valor da query
+  useEffect(() => {
+    setFilters(prev => ({
+      ...prev,
+      minPrice: prev.minPrice ? maskCurrencyBRL(prev.minPrice) : '',
+      maxPrice: prev.maxPrice ? maskCurrencyBRL(prev.maxPrice) : ''
+    }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const loadCitiesAndNeighborhoods = async () => {
     try {
       const data = await propertyService.getProperties({ active: true })
-      const uniqueCities = [...new Set(data.map(p => p.city).filter(Boolean))]
-      const uniqueNeighborhoods = [...new Set(data.map(p => p.neighborhood).filter(Boolean))]
-      setCities(uniqueCities.sort())
-      setNeighborhoods(uniqueNeighborhoods.sort())
+
+      const cityMap = new Map()
+      const neighborhoodMap = new Map()
+
+      data.forEach(p => {
+        if (p.city) {
+          const key = normalize(p.city)
+          if (!cityMap.has(key)) cityMap.set(key, p.city)
+        }
+        if (p.neighborhood) {
+          const key = normalize(p.neighborhood)
+          if (!neighborhoodMap.has(key)) neighborhoodMap.set(key, p.neighborhood)
+        }
+      })
+
+      const sortedCities = Array.from(cityMap.values()).sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }))
+      const sortedNeighborhoods = Array.from(neighborhoodMap.values()).sort((a, b) => a.localeCompare(b, 'pt', { sensitivity: 'base' }))
+
+      setCities(sortedCities)
+      setNeighborhoods(sortedNeighborhoods)
     } catch (error) {
       console.error('Error loading cities and neighborhoods:', error)
     }
@@ -51,19 +87,21 @@ function PropertiesContent() {
       let data = await propertyService.getProperties(filterParams)
       
       if (filters.city) {
+        const filterCity = normalize(filters.city)
         data = data.filter(p => 
-          p.city.toLowerCase().includes(filters.city.toLowerCase())
+          normalize(p.city || '').includes(filterCity)
         )
       }
 
       if (filters.neighborhood) {
+        const filterNeighborhood = normalize(filters.neighborhood)
         data = data.filter(p =>
-          p.neighborhood && p.neighborhood.toLowerCase().includes(filters.neighborhood.toLowerCase())
+          p.neighborhood && normalize(p.neighborhood).includes(filterNeighborhood)
         )
       }
 
       if (filters.minPrice) {
-        const minPriceNum = parseFloat(filters.minPrice.replace(/[^\d]/g, ''))
+        const minPriceNum = currencyToNumber(filters.minPrice)
         data = data.filter(p => {
           if (p.price_on_request) return true
           const price = p.price || p.rent_price || 0
@@ -72,7 +110,7 @@ function PropertiesContent() {
       }
 
       if (filters.maxPrice) {
-        const maxPriceNum = parseFloat(filters.maxPrice.replace(/[^\d]/g, ''))
+        const maxPriceNum = currencyToNumber(filters.maxPrice)
         data = data.filter(p => {
           if (p.price_on_request) return true
           const price = p.price || p.rent_price || 0
@@ -277,9 +315,10 @@ function PropertiesContent() {
               <label className="text-sm font-medium text-gray-700 mb-2 block">Valor Mínimo</label>
               <input
                 type="text"
-                placeholder="Ex: 100000"
+                inputMode="numeric"
+                placeholder="R$ 0,00"
                 value={filters.minPrice}
-                onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                onChange={(e) => handleFilterChange('minPrice', maskCurrencyBRL(e.target.value))}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
               />
             </div>
@@ -287,9 +326,10 @@ function PropertiesContent() {
               <label className="text-sm font-medium text-gray-700 mb-2 block">Valor Máximo</label>
               <input
                 type="text"
-                placeholder="Ex: 500000"
+                inputMode="numeric"
+                placeholder="R$ 0,00"
                 value={filters.maxPrice}
-                onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+                onChange={(e) => handleFilterChange('maxPrice', maskCurrencyBRL(e.target.value))}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
               />
             </div>

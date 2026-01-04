@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Search, MapPin } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { propertyService } from '@/services/api'
+import { maskCurrencyBRL, currencyToNumber } from '@/lib/utils'
 
 export default function SearchBar() {
   const router = useRouter()
@@ -20,6 +21,13 @@ export default function SearchBar() {
   const [allLocations, setAllLocations] = useState([])
   const inputRef = useRef(null)
 
+  const normalize = (value = '') =>
+    value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+
   useEffect(() => {
     loadLocations()
   }, [])
@@ -27,15 +35,29 @@ export default function SearchBar() {
   const loadLocations = async () => {
     try {
       const properties = await propertyService.getProperties({ active: true })
-      const uniqueCities = [...new Set(properties.map(p => p.city).filter(Boolean))]
-      const uniqueNeighborhoods = [...new Set(properties.map(p => p.neighborhood).filter(Boolean))]
+
+      const cityMap = new Map()
+      const neighborhoodMap = new Map()
+
+      properties.forEach(p => {
+        if (p.city) {
+          const key = normalize(p.city)
+          if (!cityMap.has(key)) cityMap.set(key, p.city)
+        }
+        if (p.neighborhood) {
+          const key = normalize(p.neighborhood)
+          if (!neighborhoodMap.has(key)) neighborhoodMap.set(key, p.neighborhood)
+        }
+      })
 
       const locations = [
-        ...uniqueCities.map(city => ({ name: city, type: 'city' })),
-        ...uniqueNeighborhoods.map(neighborhood => ({ name: neighborhood, type: 'neighborhood' }))
-      ]
+        ...Array.from(cityMap.values()).map(city => ({ name: city, type: 'city' })),
+        ...Array.from(neighborhoodMap.values()).map(neighborhood => ({ name: neighborhood, type: 'neighborhood' }))
+      ].sort((a, b) => a.name.localeCompare(b.name, 'pt', { sensitivity: 'base' }))
 
       setAllLocations(locations)
+      // Exibir sugestões iniciais com foco em Brasília/Regiões logo ao carregar
+      setSuggestions(locations.slice(0, 8))
     } catch (error) {
       console.error('Error loading locations:', error)
     }
@@ -45,14 +67,22 @@ export default function SearchBar() {
     setLocation(value)
     setLocationType('') // Reset type when user types
     if (value.length > 0) {
+      const normValue = normalize(value)
       const filtered = allLocations.filter(loc =>
-        loc.name.toLowerCase().includes(value.toLowerCase())
+        normalize(loc.name).includes(normValue)
       )
       setSuggestions(filtered)
       setShowSuggestions(true)
     } else {
       setSuggestions([])
       setShowSuggestions(false)
+    }
+  }
+
+  const handleFocus = () => {
+    if (!location) {
+      setSuggestions(allLocations.slice(0, 8))
+      setShowSuggestions(true)
     }
   }
 
@@ -72,13 +102,16 @@ export default function SearchBar() {
       } else if (locationType === 'neighborhood') {
         params.append('neighborhood', location)
       } else {
+        // fallback: tratar como cidade para evitar filtro duplo que esvazia resultados
         params.append('city', location)
-        params.append('neighborhood', location)
       }
     }
     if (rooms !== '0') params.append('rooms', rooms)
-    if (minPrice) params.append('minPrice', minPrice)
-    if (maxPrice) params.append('maxPrice', maxPrice)
+
+    const minNumber = currencyToNumber(minPrice)
+    const maxNumber = currencyToNumber(maxPrice)
+    if (minNumber) params.append('minPrice', String(minNumber))
+    if (maxNumber) params.append('maxPrice', String(maxNumber))
     router.push(`/properties?${params.toString()}`)
   }
 
@@ -163,6 +196,7 @@ export default function SearchBar() {
                 placeholder="Bairro ou Cidade"
                 value={location}
                 onChange={(e) => handleLocationChange(e.target.value)}
+                onFocus={handleFocus}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium"
               />
@@ -208,16 +242,18 @@ export default function SearchBar() {
           <div className="flex gap-6">
             <input
               type="text"
-              placeholder="Min"
+              inputMode="numeric"
+              placeholder="R$ 0,00"
               value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
+              onChange={(e) => setMinPrice(maskCurrencyBRL(e.target.value))}
               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium"
             />
             <input
               type="text"
-              placeholder="Max"
+              inputMode="numeric"
+              placeholder="R$ 0,00"
               value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
+              onChange={(e) => setMaxPrice(maskCurrencyBRL(e.target.value))}
               className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium"
             />
           </div>

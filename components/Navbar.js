@@ -12,15 +12,15 @@ export default function Navbar() {
       animate={{ y: 0 }}
       className="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50"
     >
-      <div className="container mx-auto px-4 py-4">
+      <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3">
             <Image
               src="/assets/logo.png"
               alt="RD Imóveis DF Logo"
-              width={60}
-              height={60}
-              className="h-16 w-16 object-contain"
+              width={52}
+              height={52}
+              className="h-12 w-12 object-contain"
             />
             <div>
               <h1 className="text-2xl font-bold text-rd-blue">RD IMÓVEIS DF</h1>
