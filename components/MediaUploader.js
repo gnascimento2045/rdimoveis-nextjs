@@ -12,7 +12,7 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
   const dragZoneRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
 
-  const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
   const isAllowedFile = (file) => {
@@ -52,10 +52,9 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
 
     const fileArray = Array.from(files);
 
-    // Validar arquivos
     for (const file of fileArray) {
       if (file.size > MAX_FILE_SIZE) {
-        setError(`Arquivo ${file.name} é muito grande (máx: 500MB)`);
+        setError(`Arquivo ${file.name} é muito grande (máx: 10MB)`);
         return;
       }
       if (!isAllowedFile(file)) {
@@ -64,7 +63,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
       }
     }
 
-    // Sem propertyId: apenas armazenar localmente
     if (!propertyId) {
       stageFiles(fileArray);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -115,7 +113,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
   const handleRemoveMedia = async (mediaId) => {
     const target = media.find(m => m.id === mediaId);
 
-    // Staged (sem propertyId ou sem persistência)
     if (!propertyId || target?.file) {
       setMedia(prev => {
         const next = prev.filter(m => m.id !== mediaId);
@@ -125,7 +122,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
       return;
     }
 
-    // Persistido no backend
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/${mediaId}`, {
         method: 'DELETE',
@@ -192,7 +188,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      {/* Upload Zone */}
       <div
         ref={dragZoneRef}
         onDragEnter={handleDrag}
@@ -231,7 +226,7 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
               Arraste arquivos aqui ou clique para selecionar
             </p>
             <p className="text-xs text-gray-500">
-              Máximo 500MB por arquivo. Formatos: JPEG, PNG, GIF, WebP
+              Máximo 10MB por arquivo. Formatos: JPEG, PNG, GIF, WebP
             </p>
           </div>
 
@@ -245,7 +240,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
         </motion.div>
       </div>
 
-      {/* Error Message */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -257,7 +251,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
         </motion.div>
       )}
 
-      {/* Media Grid */}
       {media.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -292,7 +285,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
                       </div>
                     </>
 
-                    {/* Delete Button */}
                     <button
                       onClick={() => handleRemoveMedia(item.id)}
                       className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
@@ -300,13 +292,11 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
                       <X className="w-4 h-4" />
                     </button>
 
-                    {/* Order Indicator */}
                     <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold">
                       {index + 1}
                     </div>
                   </div>
 
-                  {/* Order Controls */}
                   {media.length > 1 && (
                     <div className="flex gap-1 mt-2 justify-center">
                       <button
@@ -330,7 +320,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
             </AnimatePresence>
           </div>
 
-          {/* Continue Button */}
           <div className="mt-8 flex gap-4">
             <button
               onClick={handleContinue}
@@ -342,7 +331,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
         </motion.div>
       )}
 
-      {/* Empty State Message */}
       {media.length === 0 && !isUploading && (
         <p className="text-center text-gray-500 text-sm mt-6">
           Nenhuma mídia adicionada ainda. Comece fazendo upload de imagens ou vídeos do imóvel.

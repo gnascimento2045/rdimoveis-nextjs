@@ -7,7 +7,7 @@ import MediaManager from './MediaManager'
 import { maskCurrencyBRL, currencyToNumber } from '@/lib/utils'
 
 export default function PropertyCreationWizard({ isOpen, onClose, onSave, property = null }) {
-  const [step, setStep] = useState(1) // Step 1: Media Upload, Step 2: Property Details
+  const [step, setStep] = useState(1)
   const [uploadedMedia, setUploadedMedia] = useState([])
   const [propertyId, setPropertyId] = useState(null)
   const creatingRef = useRef(false)
@@ -23,7 +23,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
     }
   })
 
-  // Características do imóvel
   const characteristicsData = {
     internas: [
       'Ar condicionado',
@@ -84,7 +83,7 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
     area: '',
     is_featured: false,
     videos: [],
-    videoUrlInput: '', // Campo temporário para input de URL
+    videoUrlInput: '',
     characteristics: {
       internas: [],
       externas: [],
@@ -92,7 +91,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
     }
   })
 
-  // Opções de Condição baseadas em Finalidade
   const getCondicaoOptions = () => {
     switch (formData.finalidade) {
       case 'venda':
@@ -108,7 +106,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
 
   const condicaoOptions = getCondicaoOptions()
 
-  // Auto-ajusta condição se a finalidade muda
   useEffect(() => {
     const validOptions = getCondicaoOptions()
     if (!validOptions.includes(formData.condicao)) {
@@ -135,13 +132,11 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
       const data = await response.json()
       console.log('Mídias carregadas:', data)
       
-      // Separar imagens e vídeos
       const images = data.filter(m => m.media_type === 'image')
       const videos = data.filter(m => m.media_type === 'video').map(m => ({ url: m.media_url, id: m.id }))
       
       setUploadedMedia(images)
       
-      // Carregar URLs de vídeo no formData
       if (videos.length > 0) {
         setFormData(prev => ({
           ...prev,
@@ -157,9 +152,8 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
     if (property) {
       setFormData(normalizeCharacteristics(property))
       setPropertyId(property.id)
-      // Carregar mídias existentes
       loadExistingMedia(property.id)
-      setStep(1) // Para edição, começa no Step 1 para gerenciar mídias
+      setStep(1)
     }
   }, [property, isOpen])
 
@@ -249,7 +243,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
     if (!newPropertyId) return
     setPropertyId(newPropertyId)
 
-    // Upload de mídias selecionadas (apenas as que têm arquivo em memória)
     const stagedFiles = uploadedMedia.filter(m => m.file)
     if (stagedFiles.length > 0) {
       try {
@@ -274,7 +267,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
           return response.json()
         }))
 
-        // Substitui staged por itens persistidos
         setUploadedMedia(prev => {
           const persisted = prev.filter(m => !m.file)
           return [...persisted, ...uploaded]
@@ -295,7 +287,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Header com indicador de progresso */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-2xl font-bold text-gray-900">
@@ -309,7 +300,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
             </button>
           </div>
 
-          {/* Progress Indicator */}
           {!property && (
             <div className="flex items-center gap-4">
               <div className="flex-1">
@@ -374,7 +364,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
           )}
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto">
           {step === 1 && !property ? (
             <div className="p-6 space-y-6">
@@ -384,7 +373,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                 existingMedia={uploadedMedia}
               />
               
-              {/* Vídeos - URLs */}
               <div className="border-t pt-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Vídeos (URLs)</h3>
                 <div className="space-y-4">
@@ -401,7 +389,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                           <button
                             type="button"
                             onClick={async () => {
-                              // Se tem ID, deletar do backend
                               if (typeof video === 'object' && video.id && propertyId) {
                                 try {
                                   const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
@@ -428,7 +415,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                     </div>
                   )}
                   
-                  {/* Input para adicionar nova URL */}
                   <div className="flex gap-2">
                     <input
                       type="url"
@@ -490,7 +476,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                 />
               </div>
               
-              {/* Vídeos - URLs */}
               <div className="border-t pt-6">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Vídeos (URLs)</h3>
                 <div className="space-y-4">
@@ -507,7 +492,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                           <button
                             type="button"
                             onClick={async () => {
-                              // Se tem ID, deletar do backend
                               if (typeof video === 'object' && video.id && propertyId) {
                                 try {
                                   const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
@@ -534,7 +518,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                     </div>
                   )}
                   
-                  {/* Input para adicionar nova URL */}
                   <div className="flex gap-2">
                     <input
                       type="url"
@@ -596,7 +579,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* Informações Principais */}
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Informações Principais</h3>
                 <div className="space-y-4">
@@ -677,7 +659,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                 </div>
               </div>
 
-              {/* Finalidade e Condição */}
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Tipo de Operação</h3>
                 <div className="grid grid-cols-2 gap-4">
@@ -728,7 +709,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                 </p>
               </div>
 
-              {/* Tipo de Imóvel */}
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Tipo de Imóvel</h3>
                 <div>
@@ -753,7 +733,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                 </p>
               </div>
 
-              {/* Detalhes */}
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Detalhes</h3>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -812,7 +791,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                 </div>
               </div>
 
-              {/* Valores */}
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Valores</h3>
                 <div className="space-y-3">
@@ -855,7 +833,7 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                 </div>
               </div>
 
-              {/* Destaque */}
+
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Opções</h3>
                 <div className="space-y-4">
@@ -920,7 +898,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                   </div>
                 </div>
 
-                {/* Lazer */}
                 <div className="mb-8">
                   <h4 className="text-base font-bold text-gray-800 mb-3">Lazer</h4>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -942,7 +919,6 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
                 </div>
               </div>
 
-              {/* Buttons */}
               <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
                 <button
                   type="button"

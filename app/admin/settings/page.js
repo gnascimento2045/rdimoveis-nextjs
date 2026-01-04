@@ -6,7 +6,7 @@ const sections = [
   {
     key: 'hero-image',
     title: 'Capa principal',
-    subtitle: 'Imagem de fundo do herói na home',
+    subtitle: 'Imagem principal',
     help: 'Use imagem 16:9, pelo menos 1920x1080.'
   },
   {
@@ -137,7 +137,6 @@ export default function AdminSettings() {
                 onChange={(e) => uploadFile(section.key, e.target.files?.[0])}
                 className="block w-full text-sm text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded file:border-0 file:bg-rd-blue file:text-white file:cursor-pointer hover:file:bg-rd-blue-hover"
               />
-              <p className="text-xs text-gray-500">Ou escolha um arquivo local para enviar ao R2.</p>
             </div>
 
             <div className="flex gap-3">
@@ -185,7 +184,6 @@ export default function AdminSettings() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Imagens do site</h1>
-        <p className="text-gray-600 mt-2">Envie para o R2 ou cole uma URL pública para as seções principais.</p>
       </div>
 
       <div className="space-y-6">
