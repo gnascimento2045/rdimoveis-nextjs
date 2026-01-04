@@ -9,7 +9,7 @@ export default function AdminLayout({ children }) {
     const isLoginPage = pathname === '/admin'
     const { isAuthenticated, loading, logout } = useAdminAuth()
 
-    // Página de login não precisa de autenticação
+    
     if (isLoginPage) {
         return <>{children}</>
     }

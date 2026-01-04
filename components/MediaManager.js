@@ -14,7 +14,6 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
   const dragZoneRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
 
-  // Escutar mudanças em existingMedia (quando carrega do banco)
   useEffect(() => {
     if (existingMedia && existingMedia.length > 0) {
       console.log('Atualizando media com existingMedia:', existingMedia);
@@ -22,7 +21,7 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
     }
   }, [existingMedia]);
 
-  const MAX_FILE_SIZE = 500 * 1024 * 1024; // 500MB
+  const MAX_FILE_SIZE = 500 * 1024 * 1024; 
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
   const isAllowedFile = (file) => {
@@ -81,7 +80,6 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
         const data = await response.json();
         setMedia(prev => [...prev, data]);
       }
-      // Notificar pai sobre mudanças
       onMediaChange([...media]);
     } catch (err) {
       setError(err.message);
@@ -132,7 +130,7 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
       const updated = media
         .map(m => m.id === mediaId ? { ...m, display_order: newOrder } : m)
         .sort((a, b) => a.display_order - b.display_order);
-      
+
       setMedia(updated);
       onMediaChange(updated);
     } catch (err) {
@@ -152,7 +150,6 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
     }
   };
 
-  // Drag and Drop handlers
   const handleDragStart = (e, index) => {
     setDraggedItem(index);
     e.dataTransfer.effectAllowed = 'move';
@@ -174,26 +171,20 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
 
     if (draggedItem === null || draggedItem === dropIndex) return;
 
-    // Criar novo array com mídias reordenadas
     const newMedia = [...media];
     const draggedMedia = newMedia[draggedItem];
-    
-    // Remove o item do índice original
+
     newMedia.splice(draggedItem, 1);
-    // Insere no novo índice
     newMedia.splice(dropIndex, 0, draggedMedia);
 
-    // Atualizar display_order para cada item
     const updatedMedia = newMedia.map((item, idx) => ({
       ...item,
       display_order: idx
     }));
 
-    // Atualizar estado localmente (feedback imediato)
     setMedia(updatedMedia);
     onMediaChange(updatedMedia);
 
-    // Atualizar no servidor
     try {
       for (let i = 0; i < updatedMedia.length; i++) {
         await fetch(
@@ -229,11 +220,10 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDragDropUpload}
-        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
-          dragActive
-            ? 'border-rd-blue bg-blue-50 scale-105'
-            : 'border-gray-300 bg-white hover:border-gray-400'
-        }`}
+        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${dragActive
+          ? 'border-rd-blue bg-blue-50 scale-105'
+          : 'border-gray-300 bg-white hover:border-gray-400'
+          }`}
       >
         <input
           ref={fileInputRef}
@@ -310,9 +300,8 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
-                  className={`relative group cursor-move transition-all ${
-                    draggedItem === index ? 'opacity-50' : ''
-                  } ${dragOverIndex === index ? 'border-2 border-rd-blue bg-blue-50 rounded-lg' : ''}`}
+                  className={`relative group cursor-move transition-all ${draggedItem === index ? 'opacity-50' : ''
+                    } ${dragOverIndex === index ? 'border-2 border-rd-blue bg-blue-50 rounded-lg' : ''}`}
                 >
                   <div className="relative w-full aspect-video bg-gray-100 rounded-lg overflow-hidden">
                     {item.media_type === 'image' ? (

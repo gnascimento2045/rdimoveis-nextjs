@@ -39,14 +39,14 @@ function PropertiesContent() {
     loadCitiesAndNeighborhoods()
   }, [filters])
 
-  // Aplica máscara inicial se vier valor da query
+  
   useEffect(() => {
     setFilters(prev => ({
       ...prev,
       minPrice: prev.minPrice ? maskCurrencyBRL(prev.minPrice) : '',
       maxPrice: prev.maxPrice ? maskCurrencyBRL(prev.maxPrice) : ''
     }))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    
   }, [])
 
   const loadCitiesAndNeighborhoods = async () => {

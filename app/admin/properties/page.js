@@ -69,7 +69,7 @@ export default function AdminProperties() {
       const token = localStorage.getItem('admin_token')
       
       if (editingProperty) {
-        // Atualizar
+        
         await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${editingProperty.id}`, {
           method: 'PUT',
           headers: {
@@ -79,7 +79,7 @@ export default function AdminProperties() {
           body: JSON.stringify(propertyData)
         })
       } else {
-        // Criar novo
+        
         await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties`, {
           method: 'POST',
           headers: {

@@ -17,7 +17,6 @@ export default function PropertyGalleryModal({ images, isOpen, onClose, property
 
   if (!isOpen) return null
 
-  // Normalizar imagens para sempre ter url e type
   const normalizedImages = images.map(img => 
     typeof img === 'string' 
       ? { url: img, type: 'image' }

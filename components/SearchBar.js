@@ -12,7 +12,7 @@ export default function SearchBar() {
   const [purpose, setPurpose] = useState('comprar')
   const [propertyType, setPropertyType] = useState('0')
   const [location, setLocation] = useState('')
-  const [locationType, setLocationType] = useState('') // 'city' or 'neighborhood'
+  const [locationType, setLocationType] = useState('') 
   const [rooms, setRooms] = useState('0')
   const [minPrice, setMinPrice] = useState('')
   const [maxPrice, setMaxPrice] = useState('')
@@ -56,7 +56,6 @@ export default function SearchBar() {
       ].sort((a, b) => a.name.localeCompare(b.name, 'pt', { sensitivity: 'base' }))
 
       setAllLocations(locations)
-      // Exibir sugestões iniciais com foco em Brasília/Regiões logo ao carregar
       setSuggestions(locations.slice(0, 8))
     } catch (error) {
       console.error('Error loading locations:', error)
@@ -65,7 +64,7 @@ export default function SearchBar() {
 
   const handleLocationChange = (value) => {
     setLocation(value)
-    setLocationType('') // Reset type when user types
+    setLocationType('') 
     if (value.length > 0) {
       const normValue = normalize(value)
       const filtered = allLocations.filter(loc =>
@@ -102,7 +101,6 @@ export default function SearchBar() {
       } else if (locationType === 'neighborhood') {
         params.append('neighborhood', location)
       } else {
-        // fallback: tratar como cidade para evitar filtro duplo que esvazia resultados
         params.append('city', location)
       }
     }

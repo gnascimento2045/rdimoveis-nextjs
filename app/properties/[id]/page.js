@@ -35,12 +35,10 @@ export default function PropertyDetailPage() {
       const data = await propertyService.getProperty(params.id)
       setProperty(data)
       
-      // Carregar mídias da property_media
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${params.id}/media`)
         if (response.ok) {
           const media = await response.json()
-          // Ordenar: vídeos primeiro, depois imagens
           const sortedMedia = media.sort((a, b) => {
             const aIsVideo = a.media_type === 'video'
             const bIsVideo = b.media_type === 'video'
@@ -95,13 +93,11 @@ export default function PropertyDetailPage() {
   const getPlayableUrl = (url) => {
     if (!url) return ''
 
-    // YouTube watch or share links -> embed
     const ytWatch = url.match(/youtube\.com\/watch\?v=([\w-]{11})/)
     const ytShort = url.match(/youtu\.be\/([\w-]{11})/)
     const youtubeId = ytWatch?.[1] || ytShort?.[1]
     if (youtubeId) return `https://www.youtube.com/embed/${youtubeId}`
 
-    // Direct video URLs (mp4/webm/etc.) stay as-is
     return url
   }
 
@@ -110,7 +106,6 @@ export default function PropertyDetailPage() {
     return /youtube\.com|youtu\.be/.test(url)
   }
 
-  // Renderizar campo de informação apenas se preenchido
   const renderInfo = (label, value, icon = null) => {
     if (!value && value !== 0) return null
     return (

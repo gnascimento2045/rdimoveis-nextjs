@@ -49,11 +49,11 @@ export default function AdminLogin() {
                 throw new Error(data.detail || 'Erro ao fazer login')
             }
 
-            // Salvar token no localStorage
+            
             localStorage.setItem('admin_token', data.access_token)
             localStorage.setItem('admin_email', email)
 
-            // Redirecionar para dashboard
+            
             router.push('/admin/dashboard')
         } catch (err) {
             setError(err.message || 'Email ou senha inválidos')

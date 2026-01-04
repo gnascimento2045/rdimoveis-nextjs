@@ -22,7 +22,6 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
     is_featured: false,
   })
 
-  // Opções de Condição baseadas em Finalidade
   const getCondicaoOptions = () => {
     switch (formData.finalidade) {
       case 'venda':
@@ -38,7 +37,6 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
 
   const condicaoOptions = getCondicaoOptions()
 
-  // Auto-ajusta condição se a finalidade muda
   useEffect(() => {
     const validOptions = getCondicaoOptions()
     if (!validOptions.includes(formData.condicao)) {

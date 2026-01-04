@@ -12,14 +12,12 @@ export default function PropertyCard({ property, index = 0 }) {
   const [isHovering, setIsHovering] = useState(false)
   const autoScrollInterval = useRef(null)
 
-  // Carregar mídias do property_media
   useEffect(() => {
     const loadMedia = async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${property.id}/media`)
         if (response.ok) {
           const media = await response.json()
-          // Ordenar: vídeos primeiro, depois imagens
           const sortedMedia = media.sort((a, b) => {
             const aIsVideo = a.media_type === 'video'
             const bIsVideo = b.media_type === 'video'
@@ -40,12 +38,11 @@ export default function PropertyCard({ property, index = 0 }) {
     ? mediaItems.map(m => ({ url: m.media_url, type: m.media_type }))
     : [{ url: 'https://images.unsplash.com/photo-1757439402214-2311405d70bd?crop=entropy&cs=srgb&fm=jpg&q=85', type: 'image' }]
 
-  // Auto-scroll de imagens ao passar o mouse
   useEffect(() => {
     if (isHovering && mediaUrls.length > 1) {
       autoScrollInterval.current = setInterval(() => {
         setCurrentImageIndex((prev) => (prev + 1) % mediaUrls.length)
-      }, 1500) // Troca de imagem a cada 1.5 segundos
+      }, 1500) 
     } else {
       if (autoScrollInterval.current) {
         clearInterval(autoScrollInterval.current)
