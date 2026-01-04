@@ -67,12 +67,12 @@ export default function PropertyCard({ property, index = 0 }) {
     >
       <Link href={`/properties/${property.id}`}>
         <div 
-          className="group overflow-hidden rounded-xl shadow-sm hover:shadow-2xl transition-all duration-300 border-0 bg-white"
+          className="group overflow-hidden rounded-xl shadow-sm hover:shadow-2xl transition-all duration-300 border-0 bg-white h-full flex flex-col"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
           {/* Imagem/Vídeo */}
-          <div className="relative h-64 overflow-hidden bg-gray-100">
+          <div className="relative h-64 overflow-hidden bg-gray-100 flex-shrink-0">
             {mediaUrls.length > 0 && (
               mediaUrls[currentImageIndex].type === 'video' ? (
                 <video
@@ -122,9 +122,9 @@ export default function PropertyCard({ property, index = 0 }) {
           </div>
 
           {/* Informações */}
-          <div className="p-5">
+          <div className="p-5 flex flex-col flex-grow">
             {/* Título */}
-            <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+            <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 min-h-[56px]">
               {property.title}
             </h3>
 
@@ -137,12 +137,12 @@ export default function PropertyCard({ property, index = 0 }) {
             </div>
 
             {/* Descrição Curta */}
-            <p className="text-gray-600 text-sm mb-4 line-clamp-2 h-10">
-              {property.description || 'Sem descrição'}
-            </p>
+            <div className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[40px]">
+              {property.description || ''}
+            </div>
 
             {/* Preço e Botão */}
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-auto">
               <div>
                 <p className="text-xl font-bold text-rd-blue">{formatPriceDisplay(property.price, property.price_on_request)}</p>
                 {(property.finalidade === 'aluguel' || property.finalidade === 'alugar' || property.type === 'aluguel' || property.type === 'alugar') && (
@@ -150,7 +150,7 @@ export default function PropertyCard({ property, index = 0 }) {
                 )}
               </div>
               <span className="bg-rd-blue hover:bg-rd-blue-hover text-white rounded-lg px-4 py-2 font-semibold transition-colors text-sm">
-                Ver
+                Ver mais
               </span>
             </div>
           </div>
