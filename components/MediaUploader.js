@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon, Video, AlertCircle } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }) => {
@@ -29,25 +29,46 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-
     const files = e.dataTransfer.files;
     await uploadFiles(files);
   };
 
+  const stageFiles = (fileArray) => {
+    const staged = fileArray.map((file, idx) => ({
+      id: `temp-${Date.now()}-${idx}`,
+      previewUrl: URL.createObjectURL(file),
+      file,
+      media_type: 'image'
+    }));
+    setMedia(prev => {
+      const next = [...prev, ...staged];
+      onMediaUploadComplete(next);
+      return next;
+    });
+  };
+
   const uploadFiles = async (files) => {
     setError('');
+
     const fileArray = Array.from(files);
 
     // Validar arquivos
     for (const file of fileArray) {
       if (file.size > MAX_FILE_SIZE) {
-        setError(`Arquivo ${file.name} é muito grande (máx: 50MB)`);
+        setError(`Arquivo ${file.name} é muito grande (máx: 500MB)`);
         return;
       }
       if (!isAllowedFile(file)) {
         setError(`Tipo de arquivo não suportado: ${file.name}`);
         return;
       }
+    }
+
+    // Sem propertyId: apenas armazenar localmente
+    if (!propertyId) {
+      stageFiles(fileArray);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
     }
 
     setIsUploading(true);
@@ -71,7 +92,11 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
         }
 
         const data = await response.json();
-        setMedia(prev => [...prev, data]);
+        setMedia(prev => {
+          const next = [...prev, data];
+          onMediaUploadComplete(next);
+          return next;
+        });
       }
     } catch (err) {
       setError(err.message);
@@ -88,6 +113,19 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
   };
 
   const handleRemoveMedia = async (mediaId) => {
+    const target = media.find(m => m.id === mediaId);
+
+    // Staged (sem propertyId ou sem persistência)
+    if (!propertyId || target?.file) {
+      setMedia(prev => {
+        const next = prev.filter(m => m.id !== mediaId);
+        onMediaUploadComplete(next);
+        return next;
+      });
+      return;
+    }
+
+    // Persistido no backend
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/${mediaId}`, {
         method: 'DELETE',
@@ -98,13 +136,18 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
 
       if (!response.ok) throw new Error('Erro ao deletar');
 
-      setMedia(prev => prev.filter(m => m.id !== mediaId));
+      setMedia(prev => {
+        const next = prev.filter(m => m.id !== mediaId);
+        onMediaUploadComplete(next);
+        return next;
+      });
     } catch (err) {
       setError('Erro ao deletar mídia');
     }
   };
 
   const handleUpdateOrder = async (mediaId, newOrder) => {
+    if (!propertyId) return;
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/${mediaId}/order`, {
         method: 'PUT',
@@ -126,12 +169,14 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
   };
 
   const moveUp = (index) => {
+    if (!propertyId) return;
     if (index > 0) {
       handleUpdateOrder(media[index].id, media[index - 1].display_order - 1);
     }
   };
 
   const moveDown = (index) => {
+    if (!propertyId) return;
     if (index < media.length - 1) {
       handleUpdateOrder(media[index].id, media[index + 1].display_order + 1);
     }
@@ -164,7 +209,7 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*,video/*"
+          accept="image/*"
           onChange={handleFileInput}
           className="hidden"
           disabled={isUploading}
@@ -180,13 +225,13 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
 
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              Adicione Imagens ou Vídeos
+              Adicione Imagens
             </h3>
             <p className="text-sm text-gray-600 mb-4">
               Arraste arquivos aqui ou clique para selecionar
             </p>
             <p className="text-xs text-gray-500">
-              Máximo 50MB por arquivo. Formatos: JPEG, PNG, GIF, WebP, MP4, WebM
+              Máximo 500MB por arquivo. Formatos: JPEG, PNG, GIF, WebP
             </p>
           </div>
 
@@ -235,27 +280,17 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
                   className="relative group"
                 >
                   <div className="relative w-full aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                    {item.media_type === 'image' ? (
-                      <>
-                        <img
-                          src={item.media_url}
-                          alt={`Mídia ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white rounded px-2 py-1 flex items-center gap-1 text-xs">
-                          <ImageIcon className="w-3 h-3" />
-                          Imagem
-                        </div>
-                      </>
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-900 flex items-center justify-center relative">
-                        <Video className="w-12 h-12 text-white opacity-50" />
-                        <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white rounded px-2 py-1 flex items-center gap-1 text-xs">
-                          <Video className="w-3 h-3" />
-                          Vídeo
-                        </div>
+                    <>
+                      <img
+                        src={item.media_url || item.previewUrl}
+                        alt={`Mídia ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white rounded px-2 py-1 flex items-center gap-1 text-xs">
+                        <ImageIcon className="w-3 h-3" />
+                        Imagem
                       </div>
-                    )}
+                    </>
 
                     {/* Delete Button */}
                     <button

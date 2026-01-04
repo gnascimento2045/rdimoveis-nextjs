@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { MapPin } from 'lucide-react'
-import { formatPrice, getFinalidadeBadge, getCondicaoBadge } from '@/lib/utils'
+import { formatPriceDisplay, getFinalidadeBadge, getCondicaoBadge } from '@/lib/utils'
 import { motion } from 'framer-motion'
 
 export default function PropertyCard({ property, index = 0 }) {
@@ -144,7 +144,7 @@ export default function PropertyCard({ property, index = 0 }) {
             {/* Preço e Botão */}
             <div className="flex items-center justify-between mt-4">
               <div>
-                <p className="text-xl font-bold text-rd-blue">{formatPrice(property.price)}</p>
+                <p className="text-xl font-bold text-rd-blue">{formatPriceDisplay(property.price, property.price_on_request)}</p>
                 {(property.finalidade === 'aluguel' || property.finalidade === 'alugar' || property.type === 'aluguel' || property.type === 'alugar') && (
                   <p className="text-xs text-gray-500">por mês</p>
                 )}

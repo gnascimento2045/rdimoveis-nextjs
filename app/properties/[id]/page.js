@@ -10,7 +10,7 @@ import { MapPin, Bed, Bath, Square, MessageCircle, Image as ImageIcon, Film, Che
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination } from 'swiper/modules'
 import { propertyService } from '@/services/api'
-import { formatPrice, getWhatsAppLink, getFinalidadeBadge, getCondicaoBadge } from '@/lib/utils'
+import { formatPriceDisplay, getWhatsAppLink, getFinalidadeBadge, getCondicaoBadge } from '@/lib/utils'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
@@ -416,7 +416,7 @@ export default function PropertyDetailPage() {
               {/* Preço */}
               <div>
                 <p className="text-gray-600 text-sm mb-2">PREÇO</p>
-                <p className="text-4xl font-bold text-rd-blue">{formatPrice(property.price)}</p>
+                <p className="text-4xl font-bold text-rd-blue">{formatPriceDisplay(property.price, property.price_on_request)}</p>
                 {(property.finalidade === 'aluguel' || property.finalidade === 'alugar' || property.type === 'aluguel' || property.type === 'alugar') && (
                   <p className="text-gray-600 text-sm mt-1">por mês</p>
                 )}

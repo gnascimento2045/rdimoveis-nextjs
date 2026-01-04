@@ -65,6 +65,7 @@ function PropertiesContent() {
       if (filters.minPrice) {
         const minPriceNum = parseFloat(filters.minPrice.replace(/[^\d]/g, ''))
         data = data.filter(p => {
+          if (p.price_on_request) return true
           const price = p.price || p.rent_price || 0
           return price >= minPriceNum
         })
@@ -73,6 +74,7 @@ function PropertiesContent() {
       if (filters.maxPrice) {
         const maxPriceNum = parseFloat(filters.maxPrice.replace(/[^\d]/g, ''))
         data = data.filter(p => {
+          if (p.price_on_request) return true
           const price = p.price || p.rent_price || 0
           return price <= maxPriceNum
         })

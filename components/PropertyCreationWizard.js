@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { X, ChevronRight } from 'lucide-react'
 import MediaUploader from './MediaUploader'
 import MediaManager from './MediaManager'
@@ -9,14 +9,30 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
   const [step, setStep] = useState(1) // Step 1: Media Upload, Step 2: Property Details
   const [uploadedMedia, setUploadedMedia] = useState([])
   const [propertyId, setPropertyId] = useState(null)
+  const creatingRef = useRef(false)
+
+  const normalizeCharacteristics = (data) => ({
+    ...data,
+    price_on_request: data?.price_on_request || false,
+    characteristics: {
+      internas: data?.characteristics?.internas || [],
+      externas: data?.characteristics?.externas || [],
+      lazer: data?.characteristics?.lazer || []
+    }
+  })
 
   // Características do imóvel
   const characteristicsData = {
     internas: [
       'Ar condicionado',
       'Armário banheiro',
+      'Banheiro social',
       'Box banheiro',
+      'Cozinha integrada',
       'Despensa',
+      'Piso cerâmico',
+      'Pintura clara e acabamento moderno',
+      'Sala bem distribuída',
       'Área de serviço',
       'Lavabo',
       'Área privativa',
@@ -28,17 +44,24 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
       'DCE'
     ],
     externas: [
+      'Condomínio fechado',
+      'Guarita com controle de acesso',
       'Segurança 24 horas',
       'Interfone',
       'Portaria 24 horas'
     ],
     lazer: [
+      'Bicicletário',
       'Salão de festas',
       'Churrasqueira',
+      'Churrasqueiras',
       'Piscina',
+      'Espaço fitness',
       'Espaço Gourmet',
+      'Espaço de convivência',
       'Hidromassagem',
-      'Playground'
+      'Playground',
+      'Praça interna'
     ]
   }
 
@@ -49,6 +72,7 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
     condicao: 'novo',
     tipo: 'apartamento',
     price: '',
+    price_on_request: false,
     city: '',
     neighborhood: '',
     address: '',
@@ -127,55 +151,13 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
     }
   }
 
-  const createEmptyProperty = async () => {
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('admin_token') || localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          title: 'Novo Imóvel',
-          description: 'Descrição pendente',
-          finalidade: 'venda',
-          condicao: 'novo',
-          tipo: 'apartamento',
-          price: 0,
-          city: 'Brasília',
-          neighborhood: '',
-          address: '',
-          bedrooms: 0,
-          bathrooms: 0,
-          garages: 0,
-          area: 0,
-          is_featured: false,
-          videos: [],
-        })
-      })
-
-      if (!response.ok) {
-        console.error('Erro ao criar propriedade vazia')
-        return
-      }
-
-      const newProperty = await response.json()
-      setPropertyId(newProperty.id)
-    } catch (err) {
-      console.error('Erro ao criar propriedade:', err)
-    }
-  }
-
   useEffect(() => {
     if (property) {
-      setFormData(property)
+      setFormData(normalizeCharacteristics(property))
       setPropertyId(property.id)
       // Carregar mídias existentes
       loadExistingMedia(property.id)
       setStep(1) // Para edição, começa no Step 1 para gerenciar mídias
-    } else if (isOpen && !propertyId) {
-      // Criar propriedade vazia ao abrir modal para novo imóvel
-      createEmptyProperty()
     }
   }, [property, isOpen])
 
@@ -187,6 +169,7 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
       condicao: 'novo',
       tipo: 'apartamento',
       price: '',
+      price_on_request: false,
       city: '',
       neighborhood: '',
       address: '',
@@ -241,15 +224,63 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
+    const priceValue = (formData.price_on_request || formData.price === '')
+      ? null
+      : Number(formData.price)
+
     const finalData = {
-      ...formData,
-      ...(propertyId && { id: propertyId }),
-      images: uploadedMedia.map(m => m.media_url)
+      ...normalizeCharacteristics(formData),
+      price: Number.isNaN(priceValue) ? null : priceValue,
+      ...(propertyId && { id: propertyId })
     }
 
-    // Salvar a propriedade
-    await onSave(finalData)
+    let saved
+    try {
+      saved = await onSave(finalData)
+    } catch (err) {
+      console.error('Erro ao salvar imóvel:', err)
+      return
+    }
+
+    const newPropertyId = saved?.id || propertyId
+    if (!newPropertyId) return
+    setPropertyId(newPropertyId)
+
+    // Upload de mídias selecionadas (apenas as que têm arquivo em memória)
+    const stagedFiles = uploadedMedia.filter(m => m.file)
+    if (stagedFiles.length > 0) {
+      try {
+        const token = localStorage.getItem('admin_token') || localStorage.getItem('token')
+        const uploaded = await Promise.all(stagedFiles.map(async (item) => {
+          const formDataUpload = new FormData()
+          formDataUpload.append('file', item.file)
+
+          const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${newPropertyId}/media`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formDataUpload
+          })
+
+          if (!response.ok) {
+            const errText = await response.text()
+            throw new Error(errText || 'Erro ao enviar imagem')
+          }
+
+          return response.json()
+        }))
+
+        // Substitui staged por itens persistidos
+        setUploadedMedia(prev => {
+          const persisted = prev.filter(m => !m.file)
+          return [...persisted, ...uploaded]
+        })
+      } catch (err) {
+        console.error('Erro ao enviar imagens:', err)
+      }
+    }
   }
 
   const handleClose = () => {
@@ -782,19 +813,42 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
               {/* Valores */}
               <div>
                 <h3 className="text-lg font-bold text-gray-900 mb-4">Valores</h3>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Preço (R$) *
-                  </label>
-                  <input
-                    type="number"
-                    name="price"
-                    value={formData.price}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
-                    placeholder="0"
-                  />
+                <div className="space-y-3">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      name="price_on_request"
+                      checked={formData.price_on_request}
+                      onChange={(e) => {
+                        const checked = e.target.checked
+                        setFormData(prev => ({
+                          ...prev,
+                          price_on_request: checked,
+                          price: checked ? '' : prev.price
+                        }))
+                      }}
+                      className="w-4 h-4 text-rd-blue rounded focus:ring-2 focus:ring-rd-blue"
+                    />
+                    <label className="ml-3 text-sm font-medium text-gray-700">
+                      Sob consulta
+                    </label>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Preço (R$) {formData.price_on_request ? '' : '*'}
+                    </label>
+                    <input
+                      type="number"
+                      name="price"
+                      value={formData.price}
+                      onChange={handleChange}
+                      required={!formData.price_on_request}
+                      disabled={formData.price_on_request}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue disabled:bg-gray-100"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
               </div>
 

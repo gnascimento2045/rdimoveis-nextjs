@@ -10,6 +10,7 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
     finalidade: 'venda',
     condicao: 'novo',
     price: '',
+    price_on_request: false,
     city: '',
     neighborhood: '',
     address: '',
@@ -50,7 +51,10 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
 
   useEffect(() => {
     if (property) {
-      setFormData(property)
+        setFormData({
+          ...property,
+          price_on_request: property.price_on_request ?? false
+        })
     } else {
       setFormData({
         title: '',
@@ -58,6 +62,7 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
         finalidade: 'venda',
         condicao: 'novo',
         price: '',
+        price_on_request: false,
         city: '',
         neighborhood: '',
         address: '',
@@ -81,7 +86,14 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    onSave(formData)
+    const priceValue = (formData.price_on_request || formData.price === '')
+      ? null
+      : Number(formData.price)
+
+    onSave({
+      ...formData,
+      price: Number.isNaN(priceValue) ? null : priceValue
+    })
   }
 
   if (!isOpen) return null
@@ -298,19 +310,42 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
           {/* Valores */}
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-4">Valores</h3>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Preço (R$) *
-              </label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleChange}
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
-                placeholder="0"
-              />
+            <div className="space-y-3">
+              <div className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="price_on_request"
+                  checked={formData.price_on_request}
+                  onChange={(e) => {
+                    const checked = e.target.checked
+                    setFormData(prev => ({
+                      ...prev,
+                      price_on_request: checked,
+                      price: checked ? '' : prev.price
+                    }))
+                  }}
+                  className="w-4 h-4 text-rd-blue rounded focus:ring-2 focus:ring-rd-blue"
+                />
+                <label className="ml-3 text-sm font-medium text-gray-700">
+                  Sob consulta
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Preço (R$) {formData.price_on_request ? '' : '*'}
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleChange}
+                  required={!formData.price_on_request}
+                  disabled={formData.price_on_request}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue disabled:bg-gray-100"
+                  placeholder="0"
+                />
+              </div>
             </div>
           </div>
 
