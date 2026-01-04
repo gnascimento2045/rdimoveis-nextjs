@@ -140,7 +140,11 @@ export default function AdminProperties() {
                   <tr key={property.id} className="border-b border-gray-200 hover:bg-gray-50">
                     <td className="px-6 py-4">{property.title}</td>
                     <td className="px-6 py-4">{property.city}</td>
-                    <td className="px-6 py-4">R$ {property.price?.toLocaleString('pt-BR')}</td>
+                    <td className="px-6 py-4">
+                      {property.price_on_request 
+                        ? 'Sob Consulta' 
+                        : `R$ ${property.price?.toLocaleString('pt-BR') || '0'}`}
+                    </td>
                     <td className="px-6 py-4">
                       <span className={`px-3 py-1 rounded-full text-xs font-bold ${
                         property.active 
