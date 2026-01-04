@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, X, Image as ImageIcon, Video, AlertCircle } from 'lucide-react';
+import { Upload, X, Image as ImageIcon, AlertCircle, GripVertical } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }) => {
@@ -11,13 +11,14 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
   const fileInputRef = useRef(null);
   const dragZoneRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState(null);
+  const [dragOverIndex, setDragOverIndex] = useState(null);
 
-  const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+  const MAX_FILE_SIZE = 10 * 1024 * 1024;
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matrosvideo'];
 
   const isAllowedFile = (file) => {
-    return [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES].includes(file.type);
+    return ALLOWED_IMAGE_TYPES.includes(file.type);
   };
 
   const handleDrag = (e) => {
@@ -30,25 +31,44 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-
     const files = e.dataTransfer.files;
     await uploadFiles(files);
   };
 
+  const stageFiles = (fileArray) => {
+    const staged = fileArray.map((file, idx) => ({
+      id: `temp-${Date.now()}-${idx}`,
+      previewUrl: URL.createObjectURL(file),
+      file,
+      media_type: 'image'
+    }));
+    setMedia(prev => {
+      const next = [...prev, ...staged];
+      onMediaUploadComplete(next);
+      return next;
+    });
+  };
+
   const uploadFiles = async (files) => {
     setError('');
+
     const fileArray = Array.from(files);
 
-    // Validar arquivos
     for (const file of fileArray) {
       if (file.size > MAX_FILE_SIZE) {
-        setError(`Arquivo ${file.name} é muito grande (máx: 50MB)`);
+        setError(`Arquivo ${file.name} é muito grande (máx: 10MB)`);
         return;
       }
       if (!isAllowedFile(file)) {
         setError(`Tipo de arquivo não suportado: ${file.name}`);
         return;
       }
+    }
+
+    if (!propertyId) {
+      stageFiles(fileArray);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      return;
     }
 
     setIsUploading(true);
@@ -58,7 +78,7 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch(`http://localhost:8000/api/properties/${propertyId}/media`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('admin_token') || localStorage.getItem('token')}`
@@ -72,7 +92,11 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
         }
 
         const data = await response.json();
-        setMedia(prev => [...prev, data]);
+        setMedia(prev => {
+          const next = [...prev, data];
+          onMediaUploadComplete(next);
+          return next;
+        });
       }
     } catch (err) {
       setError(err.message);
@@ -89,8 +113,19 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
   };
 
   const handleRemoveMedia = async (mediaId) => {
+    const target = media.find(m => m.id === mediaId);
+
+    if (!propertyId || target?.file) {
+      setMedia(prev => {
+        const next = prev.filter(m => m.id !== mediaId);
+        onMediaUploadComplete(next);
+        return next;
+      });
+      return;
+    }
+
     try {
-      const response = await fetch(`http://localhost:8000/api/properties/${propertyId}/media/${mediaId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/${mediaId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token') || localStorage.getItem('token')}`
@@ -99,15 +134,20 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
 
       if (!response.ok) throw new Error('Erro ao deletar');
 
-      setMedia(prev => prev.filter(m => m.id !== mediaId));
+      setMedia(prev => {
+        const next = prev.filter(m => m.id !== mediaId);
+        onMediaUploadComplete(next);
+        return next;
+      });
     } catch (err) {
       setError('Erro ao deletar mídia');
     }
   };
 
   const handleUpdateOrder = async (mediaId, newOrder) => {
+    if (!propertyId) return;
     try {
-      const response = await fetch(`http://localhost:8000/api/properties/${propertyId}/media/${mediaId}/order`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/${mediaId}/order`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token') || localStorage.getItem('token')}`,
@@ -127,14 +167,69 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
   };
 
   const moveUp = (index) => {
+    if (!propertyId) return;
     if (index > 0) {
       handleUpdateOrder(media[index].id, media[index - 1].display_order - 1);
     }
   };
 
   const moveDown = (index) => {
+    if (!propertyId) return;
     if (index < media.length - 1) {
       handleUpdateOrder(media[index].id, media[index + 1].display_order + 1);
+    }
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedIndex !== null && draggedIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDropReorder = async (e, dropIndex) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
+
+    const newMedia = [...media];
+    const [draggedItem] = newMedia.splice(draggedIndex, 1);
+    newMedia.splice(dropIndex, 0, draggedItem);
+
+    setMedia(newMedia);
+    onMediaUploadComplete(newMedia);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+
+    // Atualizar ordem no backend se houver propertyId
+    if (propertyId) {
+      try {
+        for (let i = 0; i < newMedia.length; i++) {
+          if (newMedia[i].id && !newMedia[i].file) {
+            await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/${newMedia[i].id}/order`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('admin_token') || localStorage.getItem('token')}`,
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify({ display_order: i })
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Erro ao atualizar ordem:', err);
+        setError('Erro ao salvar nova ordem');
+      }
     }
   };
 
@@ -148,14 +243,13 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      {/* Upload Zone */}
       <div
         ref={dragZoneRef}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
-        className={`relative border-2 border-dashed rounded-xl p-12 text-center transition-all duration-300 ${
+        className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-all duration-300 ${
           dragActive
             ? 'border-rd-blue bg-blue-50 scale-105'
             : 'border-gray-300 bg-white hover:border-gray-400'
@@ -165,43 +259,42 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
           ref={fileInputRef}
           type="file"
           multiple
-          accept="image/*,video/*"
+          accept="image/*"
           onChange={handleFileInput}
           className="hidden"
           disabled={isUploading}
         />
 
         <motion.div
-          className="flex flex-col items-center gap-4"
+          className="flex flex-col items-center gap-3"
           animate={dragActive ? { scale: 1.05 } : { scale: 1 }}
         >
-          <div className="w-16 h-16 bg-rd-blue bg-opacity-10 rounded-full flex items-center justify-center">
-            <Upload className="w-8 h-8 text-rd-blue" />
+          <div className="w-12 h-12 bg-rd-blue bg-opacity-10 rounded-full flex items-center justify-center">
+            <Upload className="w-6 h-6 text-rd-blue" />
           </div>
 
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-              Adicione Imagens ou Vídeos
+            <h3 className="text-base font-semibold text-gray-900 mb-1">
+              Adicione Imagens
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Arraste arquivos aqui ou clique para selecionar
+            <p className="text-xs text-gray-600 mb-2">
+              Arraste arquivos ou clique para selecionar
             </p>
             <p className="text-xs text-gray-500">
-              Máximo 50MB por arquivo. Formatos: JPEG, PNG, GIF, WebP, MP4, WebM
+              Máx 10MB • JPEG, PNG, GIF, WebP
             </p>
           </div>
 
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploading}
-            className="px-6 py-2 bg-rd-blue text-white rounded-lg font-medium hover:bg-opacity-90 transition-all disabled:opacity-50"
+            className="px-4 py-1.5 bg-rd-blue text-white text-sm rounded-lg font-medium hover:bg-opacity-90 transition-all disabled:opacity-50"
           >
-            {isUploading ? 'Enviando...' : 'Selecionar Arquivos'}
+            {isUploading ? 'Enviando...' : 'Selecionar'}
           </button>
         </motion.div>
       </div>
 
-      {/* Error Message */}
       {error && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -213,7 +306,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
         </motion.div>
       )}
 
-      {/* Media Grid */}
       {media.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -233,82 +325,53 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
-                  className="relative group"
+                  className={`relative group cursor-move ${
+                    dragOverIndex === index ? 'ring-2 ring-rd-blue' : ''
+                  }`}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  onDrop={(e) => handleDropReorder(e, index)}
                 >
                   <div className="relative w-full aspect-video bg-gray-100 rounded-lg overflow-hidden">
-                    {item.media_type === 'image' ? (
-                      <>
-                        <img
-                          src={item.media_url}
-                          alt={`Mídia ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white rounded px-2 py-1 flex items-center gap-1 text-xs">
-                          <ImageIcon className="w-3 h-3" />
-                          Imagem
-                        </div>
-                      </>
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-gray-600 to-gray-900 flex items-center justify-center relative">
-                        <Video className="w-12 h-12 text-white opacity-50" />
-                        <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white rounded px-2 py-1 flex items-center gap-1 text-xs">
-                          <Video className="w-3 h-3" />
-                          Vídeo
+                    <>
+                      <img
+                        src={item.media_url || item.previewUrl}
+                        alt={`Mídia ${index + 1}`}
+                        className="w-full h-full object-cover pointer-events-none"
+                      />
+                      <div className="absolute top-2 left-2 bg-black bg-opacity-50 text-white rounded px-2 py-1 flex items-center gap-1 text-xs">
+                        <ImageIcon className="w-3 h-3" />
+                        Imagem
+                      </div>
+                      
+                      {/* Indicador de arrasto */}
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                        <div className="bg-black bg-opacity-60 rounded-full p-2">
+                          <GripVertical className="w-6 h-6 text-white" />
                         </div>
                       </div>
-                    )}
+                    </>
 
-                    {/* Delete Button */}
                     <button
                       onClick={() => handleRemoveMedia(item.id)}
-                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity z-10"
                     >
                       <X className="w-4 h-4" />
                     </button>
 
-                    {/* Order Indicator */}
                     <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-semibold">
                       {index + 1}
                     </div>
                   </div>
-
-                  {/* Order Controls */}
-                  {media.length > 1 && (
-                    <div className="flex gap-1 mt-2 justify-center">
-                      <button
-                        onClick={() => moveUp(index)}
-                        disabled={index === 0}
-                        className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        ↑
-                      </button>
-                      <button
-                        onClick={() => moveDown(index)}
-                        disabled={index === media.length - 1}
-                        className="px-2 py-1 text-xs bg-gray-200 hover:bg-gray-300 rounded disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        ↓
-                      </button>
-                    </div>
-                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
           </div>
-
-          {/* Continue Button */}
-          <div className="mt-8 flex gap-4">
-            <button
-              onClick={handleContinue}
-              className="flex-1 px-6 py-3 bg-rd-blue text-white font-semibold rounded-lg hover:bg-opacity-90 transition-all"
-            >
-              Continuar para Informações do Imóvel
-            </button>
-          </div>
         </motion.div>
       )}
 
-      {/* Empty State Message */}
       {media.length === 0 && !isUploading && (
         <p className="text-center text-gray-500 text-sm mt-6">
           Nenhuma mídia adicionada ainda. Comece fazendo upload de imagens ou vídeos do imóvel.

@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { MapPin } from 'lucide-react'
-import { formatPrice, getFinalidadeBadge, getCondicaoBadge } from '@/lib/utils'
+import { formatPriceDisplay, getFinalidadeBadge, getCondicaoBadge } from '@/lib/utils'
 import { motion } from 'framer-motion'
 
 export default function PropertyCard({ property, index = 0 }) {
@@ -13,14 +12,19 @@ export default function PropertyCard({ property, index = 0 }) {
   const [isHovering, setIsHovering] = useState(false)
   const autoScrollInterval = useRef(null)
 
-  // Carregar mídias do property_media
   useEffect(() => {
     const loadMedia = async () => {
       try {
-        const response = await fetch(`http://localhost:8000/api/properties/${property.id}/media`)
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${property.id}/media`)
         if (response.ok) {
           const media = await response.json()
-          const sortedMedia = media.sort((a, b) => a.display_order - b.display_order)
+          const sortedMedia = media.sort((a, b) => {
+            const aIsVideo = a.media_type === 'video'
+            const bIsVideo = b.media_type === 'video'
+            if (aIsVideo && !bIsVideo) return -1
+            if (!aIsVideo && bIsVideo) return 1
+            return a.display_order - b.display_order
+          })
           setMediaItems(sortedMedia)
         }
       } catch (error) {
@@ -30,16 +34,15 @@ export default function PropertyCard({ property, index = 0 }) {
     loadMedia()
   }, [property.id])
 
-  const images = mediaItems.length > 0 
-    ? mediaItems.map(m => m.media_url)
-    : ['https://images.unsplash.com/photo-1757439402214-2311405d70bd?crop=entropy&cs=srgb&fm=jpg&q=85']
+  const mediaUrls = mediaItems.length > 0 
+    ? mediaItems.map(m => ({ url: m.media_url, type: m.media_type }))
+    : [{ url: 'https://images.unsplash.com/photo-1757439402214-2311405d70bd?crop=entropy&cs=srgb&fm=jpg&q=85', type: 'image' }]
 
-  // Auto-scroll de imagens ao passar o mouse
   useEffect(() => {
-    if (isHovering && images.length > 1) {
+    if (isHovering && mediaUrls.length > 1) {
       autoScrollInterval.current = setInterval(() => {
-        setCurrentImageIndex((prev) => (prev + 1) % images.length)
-      }, 1500) // Troca de imagem a cada 1.5 segundos
+        setCurrentImageIndex((prev) => (prev + 1) % mediaUrls.length)
+      }, 1500) 
     } else {
       if (autoScrollInterval.current) {
         clearInterval(autoScrollInterval.current)
@@ -51,7 +54,7 @@ export default function PropertyCard({ property, index = 0 }) {
         clearInterval(autoScrollInterval.current)
       }
     }
-  }, [isHovering, images.length])
+  }, [isHovering, mediaUrls.length])
 
   return (
     <motion.div
@@ -61,28 +64,39 @@ export default function PropertyCard({ property, index = 0 }) {
     >
       <Link href={`/properties/${property.id}`}>
         <div 
-          className="group overflow-hidden rounded-xl shadow-sm hover:shadow-2xl transition-all duration-300 border-0 bg-white"
+          className="group overflow-hidden rounded-xl shadow-sm hover:shadow-2xl transition-all duration-300 border-0 bg-white h-full flex flex-col"
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
         >
-          {/* Imagem */}
-          <div className="relative h-64 overflow-hidden bg-gray-100">
-            {images.length > 0 && (
-              <Image
-                src={images[currentImageIndex]}
-                alt={property.title}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                onError={(e) => {
-                  e.target.src = 'https://images.unsplash.com/photo-1757439402214-2311405d70bd?crop=entropy&cs=srgb&fm=jpg&q=85'
-                }}
-              />
+          {/* Imagem/Vídeo */}
+          <div className="relative h-64 overflow-hidden bg-gray-100 flex-shrink-0">
+            {mediaUrls.length > 0 && (
+              mediaUrls[currentImageIndex].type === 'video' ? (
+                <video
+                  src={mediaUrls[currentImageIndex].url}
+                  alt={property.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  muted
+                  onError={(e) => {
+                    e.target.style.display = 'none'
+                  }}
+                />
+              ) : (
+                <img
+                  src={mediaUrls[currentImageIndex].url}
+                  alt={property.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  onError={(e) => {
+                    e.target.style.display = 'none'
+                  }}
+                />
+              )
             )}
 
-            {/* Indicadores de Imagem */}
-            {images.length > 1 && (
+            {/* Indicadores de Imagem/Vídeo */}
+            {mediaUrls.length > 1 && (
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
-                {images.map((_, idx) => (
+                {mediaUrls.map((_, idx) => (
                   <div
                     key={idx}
                     className={`h-1.5 rounded-full transition-all ${
@@ -105,9 +119,9 @@ export default function PropertyCard({ property, index = 0 }) {
           </div>
 
           {/* Informações */}
-          <div className="p-5">
+          <div className="p-5 flex flex-col flex-grow">
             {/* Título */}
-            <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2">
+            <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 min-h-[56px]">
               {property.title}
             </h3>
 
@@ -120,20 +134,20 @@ export default function PropertyCard({ property, index = 0 }) {
             </div>
 
             {/* Descrição Curta */}
-            <p className="text-gray-600 text-sm mb-4 line-clamp-2 h-10">
-              {property.description || 'Sem descrição'}
-            </p>
+            <div className="text-gray-600 text-sm mb-4 line-clamp-2 min-h-[40px]">
+              {property.description || ''}
+            </div>
 
             {/* Preço e Botão */}
-            <div className="flex items-center justify-between mt-4">
+            <div className="flex items-center justify-between mt-auto">
               <div>
-                <p className="text-xl font-bold text-rd-blue">{formatPrice(property.price)}</p>
+                <p className="text-xl font-bold text-rd-blue">{formatPriceDisplay(property.price, property.price_on_request)}</p>
                 {(property.finalidade === 'aluguel' || property.finalidade === 'alugar' || property.type === 'aluguel' || property.type === 'alugar') && (
                   <p className="text-xs text-gray-500">por mês</p>
                 )}
               </div>
               <span className="bg-rd-blue hover:bg-rd-blue-hover text-white rounded-lg px-4 py-2 font-semibold transition-colors text-sm">
-                Ver
+                Ver mais
               </span>
             </div>
           </div>

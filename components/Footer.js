@@ -1,7 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Building2, Phone, Facebook, Instagram } from 'lucide-react'
+import Image from 'next/image'
+import { Phone, Facebook, Instagram } from 'lucide-react'
 
 export default function Footer() {
   return (
@@ -10,7 +11,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
             <div className="flex items-center space-x-3 mb-4">
-              <Building2 className="h-8 w-8 text-rd-red" />
+              <Image
+                src="/assets/logo.png"
+                alt="RD Imóveis DF Logo"
+                width={56}
+                height={56}
+                className="h-14 w-14 object-contain"
+              />
               <div>
                 <h3 className="text-xl font-bold">RD IMÓVEIS DF</h3>
                 <p className="text-xs text-gray-400">Idealize! Sonhe! Realize!</p>

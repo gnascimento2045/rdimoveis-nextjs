@@ -14,7 +14,6 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
   const dragZoneRef = useRef(null);
   const [dragActive, setDragActive] = useState(false);
 
-  // Escutar mudanças em existingMedia (quando carrega do banco)
   useEffect(() => {
     if (existingMedia && existingMedia.length > 0) {
       console.log('Atualizando media com existingMedia:', existingMedia);
@@ -22,12 +21,11 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
     }
   }, [existingMedia]);
 
-  const MAX_FILE_SIZE = 50 * 1024 * 1024;
+  const MAX_FILE_SIZE = 500 * 1024 * 1024; 
   const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-  const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matrosvideo'];
 
   const isAllowedFile = (file) => {
-    return [...ALLOWED_IMAGE_TYPES, ...ALLOWED_VIDEO_TYPES].includes(file.type);
+    return ALLOWED_IMAGE_TYPES.includes(file.type);
   };
 
   const handleDrag = (e) => {
@@ -66,7 +64,7 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
         const formData = new FormData();
         formData.append('file', file);
 
-        const response = await fetch(`http://localhost:8000/api/properties/${propertyId}/media`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('admin_token') || localStorage.getItem('token')}`
@@ -82,7 +80,6 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
         const data = await response.json();
         setMedia(prev => [...prev, data]);
       }
-      // Notificar pai sobre mudanças
       onMediaChange([...media]);
     } catch (err) {
       setError(err.message);
@@ -100,7 +97,7 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
 
   const handleRemoveMedia = async (mediaId) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/properties/${propertyId}/media/${mediaId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/${mediaId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token') || localStorage.getItem('token')}`
@@ -119,7 +116,7 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
 
   const handleUpdateOrder = async (mediaId, newOrder) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/properties/${propertyId}/media/${mediaId}/order`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/${mediaId}/order`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('admin_token') || localStorage.getItem('token')}`,
@@ -133,7 +130,7 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
       const updated = media
         .map(m => m.id === mediaId ? { ...m, display_order: newOrder } : m)
         .sort((a, b) => a.display_order - b.display_order);
-      
+
       setMedia(updated);
       onMediaChange(updated);
     } catch (err) {
@@ -153,7 +150,6 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
     }
   };
 
-  // Drag and Drop handlers
   const handleDragStart = (e, index) => {
     setDraggedItem(index);
     e.dataTransfer.effectAllowed = 'move';
@@ -175,30 +171,24 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
 
     if (draggedItem === null || draggedItem === dropIndex) return;
 
-    // Criar novo array com mídias reordenadas
     const newMedia = [...media];
     const draggedMedia = newMedia[draggedItem];
-    
-    // Remove o item do índice original
+
     newMedia.splice(draggedItem, 1);
-    // Insere no novo índice
     newMedia.splice(dropIndex, 0, draggedMedia);
 
-    // Atualizar display_order para cada item
     const updatedMedia = newMedia.map((item, idx) => ({
       ...item,
       display_order: idx
     }));
 
-    // Atualizar estado localmente (feedback imediato)
     setMedia(updatedMedia);
     onMediaChange(updatedMedia);
 
-    // Atualizar no servidor
     try {
       for (let i = 0; i < updatedMedia.length; i++) {
         await fetch(
-          `http://localhost:8000/api/properties/${propertyId}/media/${updatedMedia[i].id}/order`,
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/${updatedMedia[i].id}/order`,
           {
             method: 'PUT',
             headers: {
@@ -230,11 +220,10 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDragDropUpload}
-        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${
-          dragActive
-            ? 'border-rd-blue bg-blue-50 scale-105'
-            : 'border-gray-300 bg-white hover:border-gray-400'
-        }`}
+        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${dragActive
+          ? 'border-rd-blue bg-blue-50 scale-105'
+          : 'border-gray-300 bg-white hover:border-gray-400'
+          }`}
       >
         <input
           ref={fileInputRef}
@@ -311,9 +300,8 @@ const MediaManager = ({ onMediaChange, propertyId, existingMedia = [], isEditing
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, index)}
                   onDragEnd={handleDragEnd}
-                  className={`relative group cursor-move transition-all ${
-                    draggedItem === index ? 'opacity-50' : ''
-                  } ${dragOverIndex === index ? 'border-2 border-rd-blue bg-blue-50 rounded-lg' : ''}`}
+                  className={`relative group cursor-move transition-all ${draggedItem === index ? 'opacity-50' : ''
+                    } ${dragOverIndex === index ? 'border-2 border-rd-blue bg-blue-50 rounded-lg' : ''}`}
                 >
                   <div className="relative w-full aspect-video bg-gray-100 rounded-lg overflow-hidden">
                     {item.media_type === 'image' ? (

@@ -16,21 +16,20 @@ export default function Home() {
   const [selectedType, setSelectedType] = useState('comprar')
   const [loading, setLoading] = useState(true)
   const [heroImageUrl, setHeroImageUrl] = useState('https://images.unsplash.com/photo-1625426242633-3be4b3379dfb?crop=entropy&cs=srgb&fm=jpg&q=85')
+  const [valuationImageUrl, setValuationImageUrl] = useState('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?crop=entropy&cs=srgb&fm=jpg&q=85')
 
   useEffect(() => {
     loadProperties()
-    loadHeroImage()
+    loadImages()
   }, [])
 
-  const loadHeroImage = async () => {
+  const loadImages = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/settings/hero-image')
-      if (response.ok) {
-        const data = await response.json()
-        if (data.url) {
-          setHeroImageUrl(data.url)
-        }
-      }
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/settings`)
+      if (!response.ok) return
+      const data = await response.json()
+      if (data['hero-image']?.url) setHeroImageUrl(data['hero-image'].url)
+      if (data['valuation-image']?.url) setValuationImageUrl(data['valuation-image'].url)
     } catch (error) {
       console.error('Error loading hero image:', error)
     }
@@ -44,6 +43,7 @@ export default function Home() {
     setLoading(true)
     try {
       let data = await propertyService.getProperties({ active: true })
+      data = data.filter(p => p.is_featured)
       data = data.slice(0, 12)
       setAllProperties(data)
       filterProperties('comprar', data)
@@ -82,31 +82,31 @@ export default function Home() {
       <Navbar />
       <WhatsAppButton />
 
-      <section className="relative pt-20 pb-32 flex items-center justify-center bg-cover bg-center" style={{backgroundImage: `url(${heroImageUrl})`}}>
+      <section className="relative min-h-[600px] sm:min-h-[700px] md:min-h-screen flex items-center justify-center bg-cover bg-center pt-20 sm:pt-24 pb-12 md:pt-8 md:pb-14" style={{backgroundImage: `url(${heroImageUrl})`}}>
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative z-10 container mx-auto px-4 text-center">
-          <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-2xl">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-2xl leading-tight">
             IDEALIZE!<br />SONHE!<br />REALIZE!
           </h1>
-          <p className="text-xl md:text-2xl text-white mb-12 drop-shadow-lg">
+          <p className="text-lg sm:text-xl md:text-2xl text-white mb-6 sm:mb-8 md:mb-10 drop-shadow-lg px-4">
             Encontre o imóvel dos seus sonhos em Brasília
           </p>
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-4xl mx-auto px-2">
             <SearchBar />
           </div>
         </div>
       </section>
 
-      <section className="py-24 bg-gray-50">
+      <section className="pt-8 pb-12 md:pt-10 md:pb-16 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-8">
+          <div className="text-center mb-8 md:mb-10">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 md:mb-7">
               Imóveis em Destaque
             </h2>
-            <div className="flex gap-4 mb-12 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 md:mb-10 justify-center max-w-2xl mx-auto">
               <button 
                 onClick={() => filterProperties('comprar')}
-                className={`px-8 py-3 font-bold rounded-lg transition-all ${
+                className={`w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 font-bold rounded-lg transition-all text-sm sm:text-base ${
                   selectedType === 'comprar' 
                     ? 'bg-rd-blue text-white hover:bg-rd-blue-hover' 
                     : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
@@ -116,7 +116,7 @@ export default function Home() {
               </button>
               <button 
                 onClick={() => filterProperties('alugar')}
-                className={`px-8 py-3 font-bold rounded-lg transition-all ${
+                className={`w-full sm:w-auto w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 font-bold rounded-lg transition-all text-sm sm:text-base ${
                   selectedType === 'alugar' 
                     ? 'bg-rd-blue text-white hover:bg-rd-blue-hover' 
                     : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
@@ -126,7 +126,7 @@ export default function Home() {
               </button>
               <button 
                 onClick={() => filterProperties('lancamentos')}
-                className={`px-8 py-3 font-bold rounded-lg transition-all ${
+                className={`w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 font-bold rounded-lg transition-all text-sm sm:text-base ${
                   selectedType === 'lancamentos' 
                     ? 'bg-rd-blue text-white hover:bg-rd-blue-hover' 
                     : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
@@ -165,17 +165,17 @@ export default function Home() {
       </section>
 
       {/* Saiba Quanto Vale Seu Imóvel */}
-      <section className="relative py-24 flex items-center justify-center bg-cover bg-center" style={{backgroundImage: 'url(https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?crop=entropy&cs=srgb&fm=jpg&q=85)'}}>
+      <section className="relative py-16 sm:py-20 md:py-24 flex items-center justify-center bg-cover bg-center" style={{backgroundImage: `url(${valuationImageUrl})`}}>
         <div className="absolute inset-0 bg-black/50"></div>
         <div className="relative z-10 container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold text-white mb-8 drop-shadow-2xl">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 sm:mb-8 drop-shadow-2xl px-4">
             Saiba quanto vale seu imóvel
           </h2>
           <a
             href="https://wa.me/5561993336757?text=Oi,%20quero%20simular%20o%20valor%20do%20meu%20imovel!"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-rd-blue hover:bg-rd-blue-hover text-white px-8 py-4 text-lg font-bold shadow-lg transition-colors rounded-lg"
+            className="inline-block bg-rd-blue hover:bg-rd-blue-hover text-white px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold shadow-lg transition-colors rounded-lg"
           >
             CALCULE AGORA!
           </a>
@@ -184,19 +184,19 @@ export default function Home() {
 
 
 
-      <section className="py-24 bg-rd-blue text-white">
+      <section className="py-16 sm:py-20 md:py-24 bg-rd-blue text-white">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 px-4">
             VAMOS AGENDAR UMA VISITA
           </h2>
-          <p className="text-xl mb-8 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg md:text-xl mb-6 sm:mb-8 max-w-2xl mx-auto px-4">
             Entre em contato conosco e realize o sonho da casa própria
           </p>
           <a
             href="https://wa.me/5561993336757"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block bg-white text-rd-blue hover:bg-gray-100 rounded-full px-8 py-4 text-lg font-bold shadow-xl transition-colors"
+            className="inline-block bg-white text-rd-blue hover:bg-gray-100 rounded-full px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-bold shadow-xl transition-colors"
           >
             Falar com um Corretor
           </a>
