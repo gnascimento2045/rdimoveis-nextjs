@@ -165,16 +165,16 @@ export default function SearchBar() {
       </div>
 
       {/* Grid de campos */}
-      <div className="space-y-6 mb-8">
+      <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
         {/* Primeira linha: Tipo, Localização, Quartos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Tipo */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <label className="block text-xs font-bold text-rd-blue tracking-wide">TIPO</label>
             <select
               value={propertyType}
               onChange={(e) => setPropertyType(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue bg-white text-gray-700 font-medium"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue bg-white text-gray-700 font-medium text-sm sm:text-base"
             >
               <option value="0">Todos</option>
               <option value="apartamento">Apartamento</option>
@@ -186,7 +186,7 @@ export default function SearchBar() {
           </div>
 
           {/* Localização */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <label className="block text-xs font-bold text-rd-blue tracking-wide">LOCALIZAÇÃO</label>
             <div className="relative" ref={inputRef}>
               <input
@@ -196,7 +196,7 @@ export default function SearchBar() {
                 onChange={(e) => handleLocationChange(e.target.value)}
                 onFocus={handleFocus}
                 onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium"
+                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium text-sm sm:text-base"
               />
               {showSuggestions && suggestions.length > 0 && (
                 <div className="absolute z-50 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-y-auto">
@@ -218,12 +218,12 @@ export default function SearchBar() {
           </div>
 
           {/* Quartos */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             <label className="block text-xs font-bold text-rd-blue tracking-wide">QUARTOS</label>
             <select
               value={rooms}
               onChange={(e) => setRooms(e.target.value)}
-              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue bg-white text-gray-700 font-medium"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue bg-white text-gray-700 font-medium text-sm sm:text-base"
             >
               <option value="0">Quartos</option>
               <option value="1">1 Quarto</option>
@@ -235,36 +235,36 @@ export default function SearchBar() {
         </div>
 
         {/* Segunda linha: Valor (completo) */}
-        <div className="space-y-3">
+        <div className="space-y-2 sm:space-y-3">
           <label className="block text-xs font-bold text-rd-blue tracking-wide">VALOR</label>
-          <div className="flex gap-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
             <input
               type="text"
               inputMode="numeric"
-              placeholder="R$ 0,00"
+              placeholder="Mínimo - R$ 0,00"
               value={minPrice}
               onChange={(e) => setMinPrice(maskCurrencyBRL(e.target.value))}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium"
+              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium text-sm sm:text-base"
             />
             <input
               type="text"
               inputMode="numeric"
-              placeholder="R$ 0,00"
+              placeholder="Máximo - R$ 0,00"
               value={maxPrice}
               onChange={(e) => setMaxPrice(maskCurrencyBRL(e.target.value))}
-              className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium"
+              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue font-medium text-sm sm:text-base"
             />
           </div>
         </div>
       </div>
 
       {/* Botão Buscar */}
-      <div className="flex justify-center pt-4">
+      <div className="flex justify-center pt-2 sm:pt-4">
         <button
           onClick={handleSearch}
-          className="w-full bg-rd-blue hover:bg-rd-blue-hover text-white px-8 py-4 rounded-lg font-bold text-lg shadow-lg transition-colors flex items-center justify-center space-x-2"
+          className="w-full bg-rd-blue hover:bg-rd-blue-hover text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg font-bold text-base sm:text-lg shadow-lg transition-colors flex items-center justify-center space-x-2"
         >
-          <Search className="h-5 w-5" />
+          <Search className="h-4 w-4 sm:h-5 sm:w-5" />
           <span>BUSCAR IMÓVEIS</span>
         </button>
       </div>
