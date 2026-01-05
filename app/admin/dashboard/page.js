@@ -17,7 +17,7 @@ export default function AdminDashboard() {
         const token = localStorage.getItem('admin_token')
         
         
-        const propertiesRes = await fetch('http://localhost:8000/api/properties?limit=1000', {
+        const propertiesRes = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties?limit=1000`, {
           headers: { 'Authorization': `Bearer ${token}` }
         })
         const properties = await propertiesRes.json()
