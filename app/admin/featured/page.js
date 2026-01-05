@@ -48,7 +48,7 @@ export default function AdminFeatured() {
   const handleToggleActive = async (id, currentStatus) => {
     try {
       const token = localStorage.getItem('admin_token')
-      await fetch(`http://localhost:8000/api/neighborhoods/${id}`, {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/neighborhoods/${id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -69,7 +69,7 @@ export default function AdminFeatured() {
       const token = localStorage.getItem('admin_token')
       
       if (editingNeighborhood) {
-        await fetch(`http://localhost:8000/api/neighborhoods/${editingNeighborhood.id}`, {
+        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/neighborhoods/${editingNeighborhood.id}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -78,7 +78,7 @@ export default function AdminFeatured() {
           body: JSON.stringify(neighborhoodData)
         })
       } else {
-        await fetch('http://localhost:8000/api/neighborhoods', {
+        await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/neighborhoods`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
