@@ -46,7 +46,7 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
   const [formData, setFormData] = useState({
     title: '', description: '', finalidade: 'venda', condicao: 'novo', tipo: 'apartamento',
     price: '', price_on_request: false, city: '', neighborhood: '', address: '',
-    bedrooms: '', bathrooms: '', garages: '', area: '', is_featured: false,
+    bedrooms: '', bedroom_options: [], unit_types: [], property_types: [], bathrooms: '', garages: '', area: '', is_featured: false,
     videos: [], videoUrlInput: '',
     characteristics: { internas: [], externas: [], lazer: [] }
   })
@@ -358,55 +358,237 @@ export default function PropertyCreationWizard({ isOpen, onClose, onSave, proper
       {/* Tipo de Imóvel */}
       <div>
         <h3 className="text-lg font-bold text-gray-900 mb-4">Tipo de Imóvel</h3>
-        <select
-          name="tipo" value={formData.tipo} onChange={handleChange} required
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
-        >
-          <option value="apartamento">Apartamento</option>
-          <option value="casa">Casa</option>
-          <option value="cobertura">Cobertura</option>
-          <option value="terreno">Terreno</option>
-          <option value="comercial">Comercial</option>
-        </select>
+        
+        {formData.finalidade === 'lancamento' ? (
+          /* Múltiplos tipos para lançamentos */
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600 mb-3">
+              Selecione os tipos de imóveis disponíveis neste lançamento:
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              {[
+                { value: 'apartamento', label: 'Apartamento' },
+                { value: 'casa', label: 'Casa' },
+                { value: 'cobertura', label: 'Cobertura' },
+                { value: 'terreno', label: 'Terreno' },
+                { value: 'comercial', label: 'Comercial' }
+              ].map(option => (
+                <label key={option.value} className="flex items-center space-x-3 p-3 border border-gray-300 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={formData.property_types?.includes(option.value)}
+                    onChange={(e) => {
+                      const checked = e.target.checked
+                      setFormData(prev => ({
+                        ...prev,
+                        property_types: checked
+                          ? [...(prev.property_types || []), option.value]
+                          : (prev.property_types || []).filter(t => t !== option.value)
+                      }))
+                    }}
+                    className="w-4 h-4 text-rd-blue rounded focus:ring-2 focus:ring-rd-blue"
+                  />
+                  <span className="text-sm font-medium text-gray-700">{option.label}</span>
+                </label>
+              ))}
+            </div>
+            {formData.property_types?.length > 0 && (
+              <p className="text-sm text-green-600 font-medium">
+                ✓ Selecionados: {formData.property_types.map(t => 
+                  t === 'apartamento' ? 'Apartamento' : 
+                  t === 'casa' ? 'Casa' : 
+                  t === 'cobertura' ? 'Cobertura' : 
+                  t === 'terreno' ? 'Terreno' : 'Comercial'
+                ).join(', ')}
+              </p>
+            )}
+          </div>
+        ) : (
+          /* Select único para venda/aluguel */
+          <select
+            name="tipo" value={formData.tipo} onChange={handleChange} required
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+          >
+            <option value="apartamento">Apartamento</option>
+            <option value="casa">Casa</option>
+            <option value="cobertura">Cobertura</option>
+            <option value="terreno">Terreno</option>
+            <option value="comercial">Comercial</option>
+          </select>
+        )}
       </div>
 
       {/* Características Numéricas */}
       <div>
         <h3 className="text-lg font-bold text-gray-900 mb-4">Características</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Quartos</label>
-            <input
-              type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
-              placeholder="0"
-            />
+        
+        {/* Interface para Lançamentos - Tipos de Unidades */}
+        {formData.finalidade === 'lancamento' ? (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-semibold text-gray-900 mb-2">Tipos de Unidades (Plantas)</h4>
+              <p className="text-sm text-gray-600 mb-4">
+                Adicione as diferentes opções de plantas disponíveis neste lançamento.
+              </p>
+              
+              {/* Lista de tipos de unidades */}
+              {formData.unit_types?.length > 0 && (
+                <div className="space-y-3 mb-4">
+                  {formData.unit_types.map((unit, index) => (
+                    <div key={index} className="bg-white border border-gray-300 rounded-lg p-4 flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {unit.bedrooms} {unit.bedrooms === 1 ? 'quarto' : 'quartos'}
+                          {unit.suites > 0 && ` (${unit.suites} ${unit.suites === 1 ? 'suíte' : 'suítes'})`}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {unit.bathrooms} {unit.bathrooms === 1 ? 'banheiro' : 'banheiros'} • 
+                          {unit.garages} {unit.garages === 1 ? 'vaga' : 'vagas'} • 
+                          {unit.area}m²
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData(prev => ({
+                            ...prev,
+                            unit_types: prev.unit_types.filter((_, i) => i !== index)
+                          }))
+                        }}
+                        className="text-red-600 hover:text-red-800 font-semibold"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Formulário para adicionar novo tipo */}
+              <div className="bg-gray-50 border border-gray-300 rounded-lg p-4">
+                <h5 className="font-semibold text-gray-900 mb-3">Adicionar Tipo de Unidade</h5>
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Quartos *</label>
+                    <input
+                      type="number"
+                      id="temp_bedrooms"
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+                      placeholder="2"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Banheiros *</label>
+                    <input
+                      type="number"
+                      id="temp_bathrooms"
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+                      placeholder="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Suítes</label>
+                    <input
+                      type="number"
+                      id="temp_suites"
+                      min="0"
+                      defaultValue="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+                      placeholder="0"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Vagas *</label>
+                    <input
+                      type="number"
+                      id="temp_garages"
+                      min="0"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+                      placeholder="1"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Área (m²) *</label>
+                    <input
+                      type="number"
+                      id="temp_area"
+                      min="0"
+                      step="0.01"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+                      placeholder="48"
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const bedrooms = parseInt(document.getElementById('temp_bedrooms').value) || 0
+                    const bathrooms = parseInt(document.getElementById('temp_bathrooms').value) || 0
+                    const suites = parseInt(document.getElementById('temp_suites').value) || 0
+                    const garages = parseInt(document.getElementById('temp_garages').value) || 0
+                    const area = parseFloat(document.getElementById('temp_area').value) || 0
+                    
+                    if (bedrooms && bathrooms && garages && area) {
+                      setFormData(prev => ({
+                        ...prev,
+                        unit_types: [...(prev.unit_types || []), { bedrooms, bathrooms, suites, garages, area }]
+                      }))
+                      // Limpar campos
+                      document.getElementById('temp_bedrooms').value = ''
+                      document.getElementById('temp_bathrooms').value = ''
+                      document.getElementById('temp_suites').value = '0'
+                      document.getElementById('temp_garages').value = ''
+                      document.getElementById('temp_area').value = ''
+                    } else {
+                      alert('Preencha todos os campos obrigatórios (*)')
+                    }
+                  }}
+                  className="w-full bg-rd-blue hover:bg-rd-blue-hover text-white font-semibold py-2 px-4 rounded-lg transition-colors"
+                >
+                  + Adicionar Tipo de Unidade
+                </button>
+              </div>
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Banheiros</label>
-            <input
-              type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
-              placeholder="0"
-            />
+        ) : (
+          /* Campos tradicionais para venda/aluguel */
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Quartos</label>
+              <input
+                type="number" name="bedrooms" value={formData.bedrooms} onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Banheiros</label>
+              <input
+                type="number" name="bathrooms" value={formData.bathrooms} onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Vagas</label>
+              <input
+                type="number" name="garages" value={formData.garages} onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+                placeholder="0"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Área (m²)</label>
+              <input
+                type="number" name="area" value={formData.area} onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
+                placeholder="0"
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Vagas</label>
-            <input
-              type="number" name="garages" value={formData.garages} onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
-              placeholder="0"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Área (m²)</label>
-            <input
-              type="number" name="area" value={formData.area} onChange={handleChange}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rd-blue"
-              placeholder="0"
-            />
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Preço */}

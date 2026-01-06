@@ -48,8 +48,8 @@ export default function Emprestimos() {
       <WhatsAppButton />
 
       {/* Hero Section */}
-      <section className="relative pt-24 sm:pt-28 md:pt-32 pb-16 sm:pb-20 md:pb-24 flex items-center justify-center bg-gradient-to-r from-slate-900 via-rd-blue to-blue-700">
-        <div className="absolute inset-0 opacity-10">
+      <section className="relative pt-24 sm:pt-28 md:pt-32 pb-16 sm:pb-20 md:pb-24 flex items-center justify-center bg-gradient-to-r from-slate-900 via-rd-green to-green-700">
+        <div className="absolute inset-0 opacity-20">
           <div className="absolute inset-0" style={{ backgroundImage: `url(${heroImage})`, backgroundSize: 'cover' }}></div>
         </div>
         <div className="relative z-10 container mx-auto px-4">
