@@ -9,14 +9,50 @@ import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
 import WhatsAppButton from '@/components/WhatsAppButton'
 import { propertyService } from '@/services/api'
+import Slider from 'react-slick'
+import 'slick-carousel/slick/slick.css'
+import 'slick-carousel/slick/slick-theme.css'
+
+function NextArrow(props) {
+  const { onClick } = props
+  return (
+    <button
+      onClick={onClick}
+      className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-rd-blue hover:bg-rd-blue-hover text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-all"
+      style={{ right: '-60px' }}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+      </svg>
+    </button>
+  )
+}
+
+function PrevArrow(props) {
+  const { onClick } = props
+  return (
+    <button
+      onClick={onClick}
+      className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-rd-blue hover:bg-rd-blue-hover text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg transition-all"
+      style={{ left: '-60px' }}
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
+      </svg>
+    </button>
+  )
+}
 
 export default function Home() {
   const [allProperties, setAllProperties] = useState([])
   const [filteredProperties, setFilteredProperties] = useState([])
-  const [selectedType, setSelectedType] = useState('comprar')
+  const [selectedType, setSelectedType] = useState('todos')
   const [loading, setLoading] = useState(true)
   const [heroImageUrl, setHeroImageUrl] = useState('https://images.unsplash.com/photo-1625426242633-3be4b3379dfb?crop=entropy&cs=srgb&fm=jpg&q=85')
   const [valuationImageUrl, setValuationImageUrl] = useState('https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?crop=entropy&cs=srgb&fm=jpg&q=85')
+  const [heroTitle, setHeroTitle] = useState('IDEALIZE!\nSONHE!\nREALIZE!')
+  const [heroSubtitle, setHeroSubtitle] = useState('Encontre o imóvel dos seus sonhos em Brasília')
+  const [valuationTitle, setValuationTitle] = useState('Saiba quanto vale seu imóvel')
 
   useEffect(() => {
     loadProperties()
@@ -30,8 +66,11 @@ export default function Home() {
       const data = await response.json()
       if (data['hero-image']?.url) setHeroImageUrl(data['hero-image'].url)
       if (data['valuation-image']?.url) setValuationImageUrl(data['valuation-image'].url)
+      if (data['hero-title']?.text) setHeroTitle(data['hero-title'].text)
+      if (data['hero-subtitle']?.text) setHeroSubtitle(data['hero-subtitle'].text)
+      if (data['valuation-title']?.text) setValuationTitle(data['valuation-title'].text)
     } catch (error) {
-      console.error('Error loading hero image:', error)
+      console.error('Error loading settings:', error)
     }
   }
 
@@ -46,7 +85,7 @@ export default function Home() {
       data = data.filter(p => p.is_featured)
       data = data.slice(0, 12)
       setAllProperties(data)
-      filterProperties('comprar', data)
+      filterProperties('todos', data)
     } catch (error) {
       console.error('Error loading properties:', error)
     } finally {
@@ -56,7 +95,9 @@ export default function Home() {
 
   const filterProperties = (type, properties = allProperties) => {
     let filtered = properties
-    if (type === 'comprar') {
+    if (type === 'todos') {
+      filtered = properties
+    } else if (type === 'comprar') {
       filtered = properties.filter(p => 
         p.finalidade === 'comprar' || 
         p.finalidade === 'venda' ||
@@ -86,10 +127,14 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/40"></div>
         <div className="relative z-10 container mx-auto px-4 text-center">
           <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-2xl leading-tight">
-            IDEALIZE!<br />SONHE!<br />REALIZE!
+            {heroTitle.split('\n').map((line, i) => (
+              <span key={i}>
+                {line}{i < heroTitle.split('\n').length - 1 && <br />}
+              </span>
+            ))}
           </h1>
           <p className="text-lg sm:text-xl md:text-2xl text-white mb-6 sm:mb-8 md:mb-10 drop-shadow-lg px-4">
-            Encontre o imóvel dos seus sonhos em Brasília
+            {heroSubtitle}
           </p>
           <div className="max-w-4xl mx-auto px-2">
             <SearchBar />
@@ -103,7 +148,17 @@ export default function Home() {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-900 mb-4 sm:mb-6 md:mb-7">
               Imóveis em Destaque
             </h2>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 md:mb-10 justify-center max-w-2xl mx-auto">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 md:mb-10 justify-center max-w-3xl mx-auto">
+              <button 
+                onClick={() => filterProperties('todos')}
+                className={`w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 font-bold rounded-lg transition-all text-sm sm:text-base ${
+                  selectedType === 'todos' 
+                    ? 'bg-rd-blue text-white hover:bg-rd-blue-hover' 
+                    : 'text-gray-700 bg-gray-200 hover:bg-gray-300'
+                }`}
+              >
+                TODOS
+              </button>
               <button 
                 onClick={() => filterProperties('comprar')}
                 className={`w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 font-bold rounded-lg transition-all text-sm sm:text-base ${
@@ -146,10 +201,41 @@ export default function Home() {
               <p className="text-gray-600">Nenhum imóvel disponível para esta categoria.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-              {filteredProperties.map((property, index) => (
-                <PropertyCard key={property.id} property={property} index={index} />
-              ))}
+            <div className="mb-12 px-4 relative">
+              <Slider
+                dots={true}
+                infinite={true}
+                speed={800}
+                slidesToShow={3}
+                slidesToScroll={1}
+                autoplay={true}
+                autoplaySpeed={3000}
+                pauseOnHover={true}
+                nextArrow={<NextArrow />}
+                prevArrow={<PrevArrow />}
+                responsive={[
+                  {
+                    breakpoint: 1024,
+                    settings: {
+                      slidesToShow: 2,
+                      slidesToScroll: 1,
+                    }
+                  },
+                  {
+                    breakpoint: 640,
+                    settings: {
+                      slidesToShow: 1,
+                      slidesToScroll: 1,
+                    }
+                  }
+                ]}
+              >
+                {filteredProperties.map((property, index) => (
+                  <div key={property.id} className="px-4">
+                    <PropertyCard property={property} index={index} />
+                  </div>
+                ))}
+              </Slider>
             </div>
           )}
 
@@ -169,7 +255,7 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/50"></div>
         <div className="relative z-10 container mx-auto px-4 text-center">
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 sm:mb-8 drop-shadow-2xl px-4">
-            Saiba quanto vale seu imóvel
+            {valuationTitle}
           </h2>
           <a
             href="https://wa.me/5561993336757?text=Oi,%20quero%20simular%20o%20valor%20do%20meu%20imovel!"
