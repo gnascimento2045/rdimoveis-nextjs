@@ -288,6 +288,19 @@ export default function PropertyDetailPage() {
                   {getCondicaoBadge(property.condicao || property.status)}
                 </span>
               )}
+              {/* Badges para múltiplos tipos de imóveis */}
+              {property.property_types?.length > 0 && (
+                <>
+                  {property.property_types.map(tipo => (
+                    <span key={tipo} className="bg-green-600 text-white font-semibold px-4 py-2 rounded-lg">
+                      {tipo === 'apartamento' ? 'Apartamento' : 
+                       tipo === 'casa' ? 'Casa' : 
+                       tipo === 'cobertura' ? 'Cobertura' : 
+                       tipo === 'terreno' ? 'Terreno' : 'Comercial'}
+                    </span>
+                  ))}
+                </>
+              )}
             </div>
 
             {/* Título e Localização */}
@@ -302,36 +315,75 @@ export default function PropertyDetailPage() {
 
             {/* Detalhes Rápidos */}
             <div className="bg-gray-50 rounded-xl p-6 mb-8">
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {property.bedrooms > 0 && (
-                  <div className="text-center">
-                    <Bed className="h-6 w-6 mx-auto mb-2 text-rd-blue" />
-                    <p className="text-sm text-gray-600">Quartos</p>
-                    <p className="text-xl font-bold text-gray-900">{property.bedrooms}</p>
+              {/* Se for lançamento com unit_types, mostrar tabela */}
+              {property.unit_types?.length > 0 ? (
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900 mb-4">Plantas Disponíveis</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b-2 border-gray-300">
+                          <th className="py-2 px-4 text-sm font-semibold text-gray-700">Quartos</th>
+                          <th className="py-2 px-4 text-sm font-semibold text-gray-700">Suítes</th>
+                          <th className="py-2 px-4 text-sm font-semibold text-gray-700">Banheiros</th>
+                          <th className="py-2 px-4 text-sm font-semibold text-gray-700">Vagas</th>
+                          <th className="py-2 px-4 text-sm font-semibold text-gray-700">Área</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {property.unit_types.map((unit, idx) => (
+                          <tr key={idx} className="border-b border-gray-200 hover:bg-gray-100">
+                            <td className="py-3 px-4 font-semibold text-gray-900">{unit.bedrooms}</td>
+                            <td className="py-3 px-4 text-gray-700">{unit.suites || 0}</td>
+                            <td className="py-3 px-4 text-gray-700">{unit.bathrooms}</td>
+                            <td className="py-3 px-4 text-gray-700">{unit.garages}</td>
+                            <td className="py-3 px-4 text-gray-700">{unit.area}m²</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
-                )}
-                {property.bathrooms > 0 && (
-                  <div className="text-center">
-                    <Bath className="h-6 w-6 mx-auto mb-2 text-rd-blue" />
-                    <p className="text-sm text-gray-600">Banheiros</p>
-                    <p className="text-xl font-bold text-gray-900">{property.bathrooms}</p>
-                  </div>
-                )}
-                {property.garages > 0 && (
-                  <div className="text-center">
-                    <div className="h-6 w-6 mx-auto mb-2 text-rd-blue">🚗</div>
-                    <p className="text-sm text-gray-600">Garagem</p>
-                    <p className="text-xl font-bold text-gray-900">{property.garages}</p>
-                  </div>
-                )}
-                {property.area > 0 && (
-                  <div className="text-center">
-                    <Square className="h-6 w-6 mx-auto mb-2 text-rd-blue" />
-                    <p className="text-sm text-gray-600">Área</p>
-                    <p className="text-xl font-bold text-gray-900">{property.area}m²</p>
-                  </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                /* Grid tradicional para imóveis não-lançamento */
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {/* Quartos - Condicional para bedroom_options (legado) */}
+                  {(property.bedroom_options?.length > 0 || property.bedrooms > 0) && (
+                    <div className="text-center">
+                      <Bed className="h-6 w-6 mx-auto mb-2 text-rd-blue" />
+                      <p className="text-sm text-gray-600">Quartos</p>
+                      {property.bedroom_options?.length > 0 ? (
+                        <p className="text-xl font-bold text-gray-900">
+                          {property.bedroom_options.join(', ')}
+                        </p>
+                      ) : (
+                        <p className="text-xl font-bold text-gray-900">{property.bedrooms}</p>
+                      )}
+                    </div>
+                  )}
+                  {property.bathrooms > 0 && (
+                    <div className="text-center">
+                      <Bath className="h-6 w-6 mx-auto mb-2 text-rd-blue" />
+                      <p className="text-sm text-gray-600">Banheiros</p>
+                      <p className="text-xl font-bold text-gray-900">{property.bathrooms}</p>
+                    </div>
+                  )}
+                  {property.garages > 0 && (
+                    <div className="text-center">
+                      <div className="h-6 w-6 mx-auto mb-2 text-rd-blue">🚗</div>
+                      <p className="text-sm text-gray-600">Garagem</p>
+                      <p className="text-xl font-bold text-gray-900">{property.garages}</p>
+                    </div>
+                  )}
+                  {property.area > 0 && (
+                    <div className="text-center">
+                      <Square className="h-6 w-6 mx-auto mb-2 text-rd-blue" />
+                      <p className="text-sm text-gray-600">Área</p>
+                      <p className="text-xl font-bold text-gray-900">{property.area}m²</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Descrição */}

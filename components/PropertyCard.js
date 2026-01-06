@@ -108,13 +108,19 @@ export default function PropertyCard({ property, index = 0 }) {
             )}
 
             {/* Badges */}
-            <div className="absolute top-3 left-3 flex gap-2">
+            <div className="absolute top-3 left-3 flex flex-wrap gap-2">
               <span className="bg-rd-blue text-white font-semibold px-2 py-1 rounded text-xs">
                 {getFinalidadeBadge(property.finalidade || property.type)}
               </span>
               {getCondicaoBadge(property.condicao || property.status) && (
                 <span className="bg-white text-gray-800 font-semibold px-2 py-1 rounded text-xs">
                   {getCondicaoBadge(property.condicao || property.status)}
+                </span>
+              )}
+              {/* Badge para múltiplos tipos em lançamentos */}
+              {property.property_types?.length > 0 && (
+                <span className="bg-green-600 text-white font-semibold px-2 py-1 rounded text-xs">
+                  {property.property_types.length} tipos
                 </span>
               )}
             </div>

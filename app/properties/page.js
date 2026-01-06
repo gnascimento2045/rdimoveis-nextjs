@@ -108,6 +108,19 @@ function PropertiesContent() {
         data = data.filter(p => mapPurposeToFinalidade(p.finalidade) === desiredFinalidade)
       }
       
+      // Filtro de tipo de imóvel - considera property_types para lançamentos
+      if (filters.type && filters.type !== 'todos') {
+        data = data.filter(p => {
+          const propertyTypes = p.property_types || []
+          // Para lançamentos com property_types, verifica se o tipo está no array
+          if (propertyTypes.length > 0) {
+            return propertyTypes.includes(filters.type)
+          }
+          // Para imóveis tradicionais, usa o campo tipo
+          return p.tipo === filters.type
+        })
+      }
+      
       if (filters.city) {
         const filterCity = normalize(filters.city)
         data = data.filter(p => 
@@ -144,6 +157,24 @@ function PropertiesContent() {
         const roomsNum = Number(filters.rooms)
         data = data.filter(p => {
           const bedrooms = Number(p.bedrooms || 0)
+          const bedroomOptions = p.bedroom_options || []
+          const unitTypes = p.unit_types || []
+          
+          // Para lançamentos com unit_types, verifica se algum tipo tem o número de quartos
+          if (unitTypes.length > 0) {
+            return roomsNum === 4 
+              ? unitTypes.some(unit => unit.bedrooms >= 4)
+              : unitTypes.some(unit => unit.bedrooms === roomsNum)
+          }
+          
+          // Para lançamentos com bedroom_options (legado), verifica se o número está no array
+          if (bedroomOptions.length > 0) {
+            return roomsNum === 4 
+              ? bedroomOptions.some(opt => opt >= 4)
+              : bedroomOptions.includes(roomsNum)
+          }
+          
+          // Para imóveis tradicionais, usa o campo bedrooms
           return roomsNum === 4 ? bedrooms >= 4 : bedrooms === roomsNum
         })
       }
