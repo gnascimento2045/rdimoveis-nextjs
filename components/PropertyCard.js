@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { MapPin } from 'lucide-react'
-import { formatPriceDisplay, getFinalidadeBadge, getCondicaoBadge } from '@/lib/utils'
+import { formatPriceDisplay, getFinalidadeBadge, getCondicaoBadge, slugify } from '@/lib/utils'
+import ImageSkeleton from './ImageSkeleton'
 import { motion } from 'framer-motion'
 
 export default function PropertyCard({ property, index = 0 }) {
@@ -36,7 +37,9 @@ export default function PropertyCard({ property, index = 0 }) {
 
   const mediaUrls = mediaItems.length > 0 
     ? mediaItems.map(m => ({ url: m.media_url, type: m.media_type }))
-    : [{ url: 'https://images.unsplash.com/photo-1757439402214-2311405d70bd?crop=entropy&cs=srgb&fm=jpg&q=85', type: 'image' }]
+    : [{ type: 'skeleton' }]
+
+  const slug = slugify(property.title || `${property.id}`)
 
   useEffect(() => {
     if (isHovering && mediaUrls.length > 1) {
@@ -62,7 +65,7 @@ export default function PropertyCard({ property, index = 0 }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1 }}
     >
-      <Link href={`/properties/${property.id}`}>
+      <Link href={`/properties/${property.id}?slug=${slug}`}>
         <div 
           className="group overflow-hidden rounded-xl shadow-sm hover:shadow-2xl transition-all duration-300 border-0 bg-white h-full flex flex-col"
           onMouseEnter={() => setIsHovering(true)}
@@ -81,6 +84,8 @@ export default function PropertyCard({ property, index = 0 }) {
                     e.target.style.display = 'none'
                   }}
                 />
+              ) : mediaUrls[currentImageIndex].type === 'skeleton' ? (
+                <ImageSkeleton className="object-cover" />
               ) : (
                 <img
                   src={mediaUrls[currentImageIndex].url}

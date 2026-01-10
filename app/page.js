@@ -268,7 +268,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Saiba Quanto Vale Seu Imóvel */}
       <section className="relative py-16 sm:py-20 md:py-24 flex items-center justify-center bg-cover bg-center" style={{backgroundImage: `url(${valuationImageUrl})`}}>
         <div className="absolute inset-0 bg-black/50"></div>
         <div className="relative z-10 container mx-auto px-4 text-center">

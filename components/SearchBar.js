@@ -50,15 +50,14 @@ export default function SearchBar() {
         }
       })
 
-      // Deduplicate locations with same name (prefer city type)
       const locationMap = new Map()
       
-      // Add cities first
+      
       cityMap.forEach((city, key) => {
         locationMap.set(key, { name: city, type: 'city' })
       })
       
-      // Add neighborhoods only if not already present
+      
       neighborhoodMap.forEach((neighborhood, key) => {
         if (!locationMap.has(key)) {
           locationMap.set(key, { name: neighborhood, type: 'neighborhood' })
@@ -143,7 +142,6 @@ export default function SearchBar() {
       transition={{ delay: 0.3 }}
       className="bg-white/95 backdrop-blur-md rounded-lg shadow-2xl p-4 sm:p-6 md:p-8 max-w-6xl mx-auto"
     >
-      {/* Opções: Comprar, Alugar, Lançamentos */}
       <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-8 sm:mb-10 md:mb-12 justify-center">
         <button
           onClick={() => setPurpose('comprar')}
@@ -177,11 +175,8 @@ export default function SearchBar() {
         </button>
       </div>
 
-      {/* Grid de campos */}
       <div className="space-y-4 sm:space-y-6 mb-6 sm:mb-8">
-        {/* Primeira linha: Tipo, Localização, Quartos */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Tipo */}
           <div className="space-y-2 sm:space-y-3">
             <label className="block text-xs font-bold text-rd-blue tracking-wide">TIPO</label>
             <select
@@ -198,7 +193,7 @@ export default function SearchBar() {
             </select>
           </div>
 
-          {/* Localização */}
+          
           <div className="space-y-2 sm:space-y-3">
             <label className="block text-xs font-bold text-rd-blue tracking-wide">LOCALIZAÇÃO</label>
             <div className="relative" ref={inputRef}>
@@ -230,7 +225,7 @@ export default function SearchBar() {
             </div>
           </div>
 
-          {/* Quartos */}
+          
           <div className="space-y-2 sm:space-y-3">
             <label className="block text-xs font-bold text-rd-blue tracking-wide">QUARTOS</label>
             <select
@@ -247,7 +242,6 @@ export default function SearchBar() {
           </div>
         </div>
 
-        {/* Segunda linha: Valor (completo) */}
         <div className="space-y-2 sm:space-y-3">
           <label className="block text-xs font-bold text-rd-blue tracking-wide">VALOR</label>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-6">
@@ -271,7 +265,6 @@ export default function SearchBar() {
         </div>
       </div>
 
-      {/* Botão Buscar */}
       <div className="flex justify-center pt-2 sm:pt-4">
         <button
           onClick={handleSearch}

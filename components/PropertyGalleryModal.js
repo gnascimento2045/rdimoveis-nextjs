@@ -86,7 +86,6 @@ export default function PropertyGalleryModal({ images, isOpen, onClose, property
             onTouchStart={handleTouchStart}
             onTouchEnd={handleTouchEnd}
           >
-            {/* Controles principais */}
             <div className="absolute top-4 right-4 flex items-center gap-3 pointer-events-auto">
               <button
                 onClick={() => setIsPlaying((prev) => !prev)}
@@ -104,7 +103,6 @@ export default function PropertyGalleryModal({ images, isOpen, onClose, property
               </button>
             </div>
 
-            {/* Mídia principal (imagem ou vídeo) */}
             <div className="relative w-full max-w-5xl max-h-[80vh] pointer-events-auto" onClick={(e) => e.stopPropagation()}>
               <div
                 className="relative w-full h-[55vh] sm:h-[65vh] md:h-[70vh] bg-black/70 flex items-center justify-center rounded-xl overflow-hidden"
@@ -127,7 +125,6 @@ export default function PropertyGalleryModal({ images, isOpen, onClose, property
                 )}
               </div>
 
-              {/* Navegação lateral */}
               <button
                 onClick={handlePrevious}
                 className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white/25 hover:bg-white/40 text-white rounded-full p-3 sm:p-4 transition-colors"
@@ -143,12 +140,10 @@ export default function PropertyGalleryModal({ images, isOpen, onClose, property
               </button>
             </div>
 
-            {/* Contador */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/25 backdrop-blur text-white px-5 py-2.5 rounded-full font-semibold text-sm sm:text-base">
               {currentIndex + 1} / {normalizedImages.length}
             </div>
 
-            {/* Thumbnails */}
             {normalizedImages.length > 1 && (
               <div className="absolute bottom-20 left-1/2 -translate-x-1/2 flex gap-2 overflow-x-auto max-w-[90vw] sm:max-w-2xl px-2 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                 {normalizedImages.map((media, index) => (

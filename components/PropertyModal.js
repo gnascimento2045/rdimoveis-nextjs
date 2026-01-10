@@ -99,7 +99,6 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
         <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
             {property ? 'Editar Imóvel' : 'Novo Imóvel'}
@@ -112,9 +111,8 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
           </button>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Informações Principais */}
+          
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-4">Informações Principais</h3>
             <div className="space-y-4">
@@ -195,7 +193,7 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
             </div>
           </div>
 
-          {/* Finalidade e Condição */}
+          
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-4">Tipo de Operação</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -246,7 +244,7 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
             </p>
           </div>
 
-          {/* Detalhes */}
+          
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-4">Detalhes</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -305,7 +303,7 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
             </div>
           </div>
 
-          {/* Valores */}
+          
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-4">Valores</h3>
             <div className="space-y-3">
@@ -347,7 +345,7 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
             </div>
           </div>
 
-          {/* Opções */}
+          
           <div>
             <h3 className="text-lg font-bold text-gray-900 mb-4">Opções</h3>
             <div className="space-y-4">
@@ -366,7 +364,6 @@ export default function PropertyModal({ isOpen, onClose, onSave, property }) {
             </div>
           </div>
 
-          {/* Buttons */}
           <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
             <button
               type="button"

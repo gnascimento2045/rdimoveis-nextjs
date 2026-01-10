@@ -10,8 +10,9 @@ import { MapPin, Bed, Bath, Square, Image as ImageIcon, Film, ChevronRight, Vide
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Pagination } from 'swiper/modules'
 import { propertyService } from '@/services/api'
-import { formatPriceDisplay, getWhatsAppLink, getFinalidadeBadge, getCondicaoBadge } from '@/lib/utils'
+import { formatPriceDisplay, getWhatsAppLink, getFinalidadeBadge, getCondicaoBadge, slugify } from '@/lib/utils'
 import Image from 'next/image'
+import ImageSkeleton from '@/components/ImageSkeleton'
 import 'swiper/css'
 import 'swiper/css/navigation'
 import 'swiper/css/pagination'
@@ -22,7 +23,7 @@ export default function PropertyDetailPage() {
   const [loading, setLoading] = useState(true)
   const [galleryOpen, setGalleryOpen] = useState(false)
   const [mediaItems, setMediaItems] = useState([])
-  const [activeTab, setActiveTab] = useState('fotos') // 'fotos', 'mapa', 'videos'
+  const [activeTab, setActiveTab] = useState('fotos')
   const [selectedVideoUrl, setSelectedVideoUrl] = useState(null)
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
 
@@ -30,14 +31,35 @@ export default function PropertyDetailPage() {
     loadProperty()
   }, [params.id])
 
+  useEffect(() => {
+    if (!property) return
+    try {
+      const slug = slugify(property.title || '')
+      const newPath = `/imovel/${slug}-${params.id}`
+      if (typeof window !== 'undefined' && window.location.pathname !== newPath) {
+        window.history.replaceState(null, '', newPath)
+      }
+    } catch (err) {
+      console.error('Erro ao substituir URL do imóvel:', err)
+    }
+  }, [property, params.id])
+
   const loadProperty = async () => {
     try {
       const data = await propertyService.getProperty(params.id)
       setProperty(data)
-      
+    } catch (error) {
+      console.error('Error loading property:', error)
+      setLoading(false)
+      return
+    }
+    
+    
+    setLoading(false)
+    ;(async () => {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${params.id}/media`)
-        if (response.ok) {
+        if (response && response.ok) {
           const media = await response.json()
           const sortedMedia = media.sort((a, b) => {
             const aIsVideo = a.media_type === 'video'
@@ -51,11 +73,7 @@ export default function PropertyDetailPage() {
       } catch (mediaError) {
         console.error('Error loading media:', mediaError)
       }
-    } catch (error) {
-      console.error('Error loading property:', error)
-    } finally {
-      setLoading(false)
-    }
+    })()
   }
 
   if (loading) {
@@ -84,7 +102,7 @@ export default function PropertyDetailPage() {
     ? mediaItems
         .filter(m => m.media_type === 'image')
         .map(m => ({ url: m.media_url, type: m.media_type }))
-    : [{ url: 'https://images.unsplash.com/photo-1757439402214-2311405d70bd?crop=entropy&cs=srgb&fm=jpg&q=85', type: 'image' }]
+    : [{ type: 'skeleton' }]
 
   const videos = mediaItems
     .filter(m => m.media_type === 'video')
@@ -134,7 +152,6 @@ export default function PropertyDetailPage() {
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
-            {/* Abas */}
             <div className="mb-8 flex gap-4 border-b border-gray-200">
               <button
                 onClick={() => setActiveTab('fotos')}
@@ -161,23 +178,23 @@ export default function PropertyDetailPage() {
              
             </div>
 
-            {/* Conteúdo - FOTOS */}
             {activeTab === 'fotos' && (
               <>
                 <div className="mb-8 grid grid-cols-4 gap-3 h-96">
-                  {/* Imagem Principal - Grande */}
                   <div 
                     className="col-span-2 row-span-2 rounded-2xl overflow-hidden shadow-xl cursor-pointer group relative"
                     onClick={() => setGalleryOpen(true)}
                   >
-                    <img
-                      src={images[0].url}
-                      alt={property.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
+                    {images[0].type === 'skeleton' ? (
+                      <ImageSkeleton className="w-full h-full" />
+                    ) : (
+                      <img
+                        src={images[0].url}
+                        alt={property.title}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    )}
                   </div>
-
-                  {/* Grid de Imagens Menores */}
                   {images.slice(1, 5).map((media, index) => (
                     <div
                       key={index}
@@ -186,13 +203,16 @@ export default function PropertyDetailPage() {
                         setGalleryOpen(true);
                       }}
                     >
-                      <img
-                        src={media.url}
-                        alt={`${property.title} - ${index + 2}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
+                      {media.type === 'skeleton' ? (
+                        <ImageSkeleton className="w-full h-full" />
+                      ) : (
+                        <img
+                          src={media.url}
+                          alt={`${property.title} - ${index + 2}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      )}
                       
-                      {/* Overlay Ver mais fotos na última imagem */}
                       {index === 3 && images.length > 5 && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                           <button className="text-white font-bold text-center">
@@ -206,13 +226,10 @@ export default function PropertyDetailPage() {
                 </div>
               </>
             )}
-
-            {/* Conteúdo - VÍDEOS */}
             {activeTab === 'videos' && (
               <div className="mb-8">
                 {videos && videos.length > 0 ? (
                   <div className="space-y-4">
-                    {/* Player de Vídeo Grande */}
                     <div className="relative bg-black rounded-2xl overflow-hidden shadow-2xl aspect-video">
                       {isEmbedUrl(videos[currentVideoIndex]) ? (
                         <iframe
@@ -234,7 +251,6 @@ export default function PropertyDetailPage() {
                       )}
                     </div>
 
-                    {/* Navegação e Contador */}
                     {videos.length > 1 && (
                       <div className="flex items-center justify-between px-4">
                         <button
@@ -270,15 +286,11 @@ export default function PropertyDetailPage() {
                 )}
               </div>
             )}
-
-            {/* Conteúdo - MAPA */}
             {activeTab === 'mapa' && (
               <div className="bg-gray-100 rounded-xl h-96 flex items-center justify-center">
                 <p className="text-gray-500">Mapa será exibido aqui</p>
               </div>
             )}
-
-            {/* Badges */}
             <div className="mb-6 flex gap-2 flex-wrap">
               <span className="bg-rd-blue text-white font-semibold px-4 py-2 rounded-lg">
                 {getFinalidadeBadge(property.finalidade || property.type)}
@@ -288,7 +300,6 @@ export default function PropertyDetailPage() {
                   {getCondicaoBadge(property.condicao || property.status)}
                 </span>
               )}
-              {/* Badges para múltiplos tipos de imóveis */}
               {property.property_types?.length > 0 && (
                 <>
                   {property.property_types.map(tipo => (
@@ -302,8 +313,6 @@ export default function PropertyDetailPage() {
                 </>
               )}
             </div>
-
-            {/* Título e Localização */}
             <h1 className="text-4xl font-bold text-gray-900 mb-4">{property.title}</h1>
 
             <div className="flex items-center text-gray-600 mb-8">
@@ -313,9 +322,7 @@ export default function PropertyDetailPage() {
               </span>
             </div>
 
-            {/* Detalhes Rápidos */}
             <div className="bg-gray-50 rounded-xl p-6 mb-8">
-              {/* Se for lançamento com unit_types, mostrar tabela */}
               {property.unit_types?.length > 0 ? (
                 <div>
                   <h3 className="text-lg font-bold text-gray-900 mb-4">Plantas Disponíveis</h3>
@@ -344,10 +351,9 @@ export default function PropertyDetailPage() {
                     </table>
                   </div>
                 </div>
-              ) : (
-                /* Grid tradicional para imóveis não-lançamento */
+                ) : (
+                
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {/* Quartos - Condicional para bedroom_options (legado) */}
                   {(property.bedroom_options?.length > 0 || property.bedrooms > 0) && (
                     <div className="text-center">
                       <Bed className="h-6 w-6 mx-auto mb-2 text-rd-blue" />
@@ -386,15 +392,12 @@ export default function PropertyDetailPage() {
               )}
             </div>
 
-            {/* Descrição */}
             {property.description && (
               <div className="mb-8">
                 <h2 className="text-2xl font-bold text-gray-900 mb-4">Descrição</h2>
                 <p className="text-gray-700 leading-relaxed text-lg">{property.description}</p>
               </div>
             )}
-
-            {/* Características */}
             {property.characteristics && (
               <>
                 {(property.characteristics.internas?.length > 0 ||

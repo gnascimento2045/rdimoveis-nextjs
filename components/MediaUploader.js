@@ -211,7 +211,6 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
     setDraggedIndex(null);
     setDragOverIndex(null);
 
-    // Atualizar ordem no backend se houver propertyId
     if (propertyId) {
       try {
         for (let i = 0; i < newMedia.length; i++) {
