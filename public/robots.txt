@@ -1,0 +1,11 @@
+# Robots
+User-agent: *
+Allow: /
+
+# Host
+Host: https://www.rdimoveisdf.com
+
+# Sitemaps
+Sitemap: https://www.rdimoveisdf.com/sitemap.xml
+
+
