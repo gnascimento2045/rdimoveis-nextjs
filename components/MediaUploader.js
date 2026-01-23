@@ -201,8 +201,8 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
   const handleDropReorder = async (e, dropIndex) => {
     e.preventDefault();
     if (draggedIndex === null || draggedIndex === dropIndex) return;
-
-    const newMedia = [...media];
+    const oldMedia = media.slice();
+    const newMedia = [...oldMedia];
     const [draggedItem] = newMedia.splice(draggedIndex, 1);
     newMedia.splice(dropIndex, 0, draggedItem);
 
@@ -213,17 +213,28 @@ const MediaUploader = ({ onMediaUploadComplete, propertyId, existingMedia = [] }
 
     if (propertyId) {
       try {
+        // build list of items whose index changed (ignore temp uploads with `file`)
+        const itemsToUpdate = [];
         for (let i = 0; i < newMedia.length; i++) {
-          if (newMedia[i].id && !newMedia[i].file) {
-            await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/${newMedia[i].id}/order`, {
-              method: 'PUT',
-              headers: {
-                'Authorization': `Bearer ${localStorage.getItem('admin_token') || localStorage.getItem('token')}`,
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({ display_order: i })
-            });
+          const m = newMedia[i];
+          if (!m.id || m.file) continue;
+          const oldIndex = oldMedia.findIndex(x => x.id === m.id);
+          if (oldIndex !== i) {
+            itemsToUpdate.push({ id: m.id, display_order: i });
           }
+        }
+
+        if (itemsToUpdate.length > 0) {
+          const resp = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/properties/${propertyId}/media/order`, {
+            method: 'PUT',
+            headers: {
+              'Authorization': `Bearer ${localStorage.getItem('admin_token') || localStorage.getItem('token')}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ items: itemsToUpdate })
+          });
+
+          if (!resp.ok) throw new Error('Erro ao atualizar ordem');
         }
       } catch (err) {
         console.error('Erro ao atualizar ordem:', err);
